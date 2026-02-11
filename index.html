@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOUND MIRROR — Acoustic Heritage Collective</title>
+<meta name="description" content="Sound Mirror: an acoustic heritage gamification experience. Detect enemy aircraft formations using the Abbott's Cliff Sound Mirror.">
+<link rel="icon" type="image/x-icon" href="ahc.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #070b07;
+  --panel: rgba(10,16,10,0.92);
+  --border: #2a3f2a;
+  --border-hi: #3a5f3a;
+  --text: #b0c4a8;
+  --text-dim: #5a7055;
+  --text-bright: #d4e8cc;
+  --accent: #6aaa5a;
+  --danger: #aa4040;
+  --warn: #cc9944;
+  --gold: #d4c46a;
+  --font-display: 'Special Elite', cursive;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); }
+
+body { font-family:var(--font-mono); font-size:12px; }
+
+#game-canvas {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  display:block; z-index:0;
+}
+
+/* ── OVERLAY SYSTEM ─────────────────────── */
+.overlay {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:10; pointer-events:none;
+  opacity:0; transition:opacity 0.6s ease;
+}
+.overlay.active { opacity:1; pointer-events:auto; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 32px 44px;
+  max-width: 600px; width: 90%;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(0,0,0,0.5), 0 0 20px rgba(40,80,40,0.05) inset;
+  position: relative;
+}
+.panel::before {
+  content:''; position:absolute; top:-1px; left:20%; right:20%; height:1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 28px; letter-spacing: 8px; color: var(--text-bright);
+  text-shadow: 0 0 30px rgba(100,170,100,0.15);
+  margin: 8px 0 4px;
+}
+.panel-sub {
+  font-size: 9px; letter-spacing: 6px; color: var(--text-dim);
+  text-transform: uppercase;
+}
+.panel-divider {
+  border:none; border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.blink { animation: blink 1.8s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.prompt {
+  font-size: 12px; color: var(--accent); letter-spacing: 4px;
+  margin-top: 24px;
+}
+
+/* ── LOADING ─────────────────────────────── */
+#loading-log {
+  text-align:left; font-size:11px; line-height:1.9; margin:12px 0;
+  max-height: 160px; overflow:hidden;
+}
+#loading-log .done { color: var(--accent); }
+#loading-log .pending { color: var(--text-dim); }
+
+.progress-bar {
+  width:100%; height:2px; background:#111; position:relative; margin-top:16px;
+  overflow:hidden;
+}
+.progress-bar .fill {
+  position:absolute; top:0; left:0; height:100%;
+  background: linear-gradient(90deg, #2a5a2a, var(--accent));
+  transition: width 0.4s ease;
+}
+
+/* ── INSTRUCTIONS ────────────────────────── */
+.briefing-section {
+  text-align:left; line-height:1.85; font-size:11px; color:#94a88e;
+  padding:10px 0;
+}
+.briefing-label {
+  color:var(--accent); font-weight:600; letter-spacing:2px;
+  margin-bottom:6px; font-size:11px;
+}
+.key-badge {
+  display:inline-block; background:#1a281a; border:1px solid var(--border);
+  padding:1px 8px; color:var(--text-bright); font-size:11px;
+  font-family:var(--font-mono); margin:0 2px;
+}
+.controls-row {
+  display:flex; gap:12px; align-items:center; margin:3px 0;
+}
+.controls-label { color:var(--text-dim); margin-left:8px; }
+
+/* ── WAVE INTRO ──────────────────────────── */
+#wave-intro .panel {
+  padding: 24px 40px;
+  background: rgba(10,16,10,0.88);
+}
+.wave-number {
+  font-family:var(--font-display);
+  font-size:38px; letter-spacing:6px; color:var(--text-bright);
+  text-shadow: 0 0 30px rgba(100,170,100,0.2);
+  margin:6px 0;
+}
+.wave-name {
+  font-size:14px; color:#7aaa6a; letter-spacing:5px;
+}
+.wave-prepare {
+  font-size:9px; color:var(--text-dim); letter-spacing:3px; margin-top:12px;
+}
+
+/* ── HUD ─────────────────────────────────── */
+#hud {
+  position:fixed; top:0; left:0; right:0; z-index:5;
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+}
+#hud.active { opacity:1; }
+
+.hud-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  padding:14px 20px;
+  background:linear-gradient(180deg, rgba(7,11,7,0.85) 0%, transparent 100%);
+}
+.hud-wave-label { font-size:10px; color:var(--text-dim); letter-spacing:3px; }
+.hud-formation-status { font-size:11px; margin-top:4px; }
+.hud-formation-status.alert { color:var(--warn); }
+.hud-formation-status.idle { color:#3a4a35; }
+
+.hud-score { font-size:20px; color:var(--text-bright); letter-spacing:2px; text-align:right; }
+.hud-score-label { font-size:9px; color:var(--text-dim); letter-spacing:3px; text-align:right; }
+
+.hud-center {
+  position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  text-align:center;
+}
+.hud-lives { font-size:17px; letter-spacing:5px; }
+.hud-lives .on { color:var(--accent); text-shadow:0 0 8px rgba(100,170,100,0.5); }
+.hud-lives .off { color:#1a281a; }
+.hud-streak { font-size:9px; color:#7aaa6a; letter-spacing:2px; margin-top:3px; }
+
+/* HUD message */
+#hud-message {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:6; pointer-events:none;
+  font-size:14px; font-weight:600; letter-spacing:4px;
+  padding:10px 28px;
+  background:var(--panel); border:1px solid var(--border);
+  opacity:0; transition:opacity 0.2s;
+  font-family:var(--font-mono);
+}
+#hud-message.show { opacity:1; }
+#hud-message.detect { color:#7acc7a; border-color:#3a6a3a; text-shadow:0 0 10px rgba(100,200,100,0.3); }
+#hud-message.miss { color:var(--warn); border-color:#5a4a2a; }
+#hud-message.breach { color:#cc5555; border-color:#5a2a2a; text-shadow:0 0 10px rgba(200,80,80,0.3); }
+
+/* Horn indicator */
+#horn-indicator {
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  width:320px; text-align:center; z-index:5;
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+}
+#horn-indicator.active { opacity:1; }
+
+.horn-bar {
+  position:relative; height:18px;
+  background:rgba(10,16,10,0.75); border:1px solid #1a2a1a;
+}
+.horn-bar .center-line {
+  position:absolute; left:50%; top:0; bottom:0; width:1px;
+  background: var(--border);
+}
+.horn-bar .needle {
+  position:absolute; top:2px; bottom:2px; width:5px;
+  background: var(--accent); border-radius:1px;
+  box-shadow:0 0 8px rgba(100,170,100,0.5);
+  transition:left 0.04s linear;
+  transform:translateX(-50%);
+}
+.horn-bar .effective-zone {
+  position:absolute; top:0; bottom:0;
+  background:rgba(80,160,80,0.1);
+  border-left:1px solid rgba(80,160,80,0.25);
+  border-right:1px solid rgba(80,160,80,0.25);
+  /* ±15° out of ±180° → zone is 15/180 = 8.33% on each side of center */
+  /* center is 50%, ±15° maps to 50% ± (15/180)*50% = 50% ± 4.17% → 45.83% to 54.17% */
+  left:45.83%; right:45.83%;
+}
+.horn-scale {
+  display:flex; justify-content:space-between;
+  padding:0 1px; margin-top:4px;
+}
+.horn-scale span { font-size:7px; color:#3a4a35; }
+.horn-angle-readout {
+  font-size:9px; color:var(--text-dim); letter-spacing:3px; margin-top:10px;
+}
+
+/* ── GAME OVER ───────────────────────────── */
+.gameover-title {
+  font-family:var(--font-display);
+  font-size:22px; letter-spacing:8px; color:#cc6655;
+  margin:8px 0 16px;
+}
+.stats-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  text-align:left; padding:16px 0; margin:8px 0;
+  border-top:1px solid #2a2020; border-bottom:1px solid #2a2020;
+}
+.stat-label { font-size:9px; color:var(--text-dim); letter-spacing:2px; }
+.stat-value { font-size:18px; color:var(--text-bright); font-weight:600; }
+.stat-value.small { font-size:15px; color:#94a88e; font-weight:400; }
+
+.callsign-row {
+  display:flex; gap:8px; justify-content:center; margin-top:12px;
+}
+#callsign-input {
+  background:#0a140a; border:1px solid var(--border);
+  color:var(--text-bright); font-family:var(--font-mono);
+  font-size:14px; padding:8px 12px; width:170px;
+  text-align:center; letter-spacing:3px; text-transform:uppercase;
+  outline:none;
+}
+#callsign-input:focus { border-color:var(--accent); }
+#callsign-input::placeholder { color:#2a3a2a; }
+
+#submit-btn {
+  background:#1a321a; border:1px solid var(--border);
+  color:#6a8a65; font-family:var(--font-mono);
+  font-size:11px; padding:8px 16px; cursor:pointer;
+  letter-spacing:2px; transition:all 0.2s;
+}
+#submit-btn:hover { background:#2a4a2a; color:var(--accent); border-color:var(--border-hi); }
+
+/* ── LEADERBOARD ─────────────────────────── */
+.lb-title {
+  font-family:var(--font-display);
+  font-size:20px; letter-spacing:8px; color:var(--text-bright);
+  margin:8px 0 16px;
+}
+.lb-list { border-top:1px solid var(--border); }
+.lb-row {
+  display:grid; grid-template-columns:28px 1fr 80px 44px;
+  padding:7px 4px; border-bottom:1px solid #0f180f;
+  font-size:12px; align-items:center;
+}
+.lb-row.rank1 { color:var(--gold); }
+.lb-row.rank2, .lb-row.rank3 { color:#a0c498; }
+.lb-rank { font-weight:600; }
+.lb-name { letter-spacing:2px; text-align:left; }
+.lb-score { text-align:right; font-weight:600; }
+.lb-wave { text-align:right; font-size:9px; color:var(--text-dim); }
+.lb-empty { padding:20px; color:#3a4a35; font-size:11px; }
+
+/* ── CREDITS BAR ─────────────────────────── */
+.credits {
+  font-size:8px; color:#2a3a2a; letter-spacing:2px;
+  margin-top:16px; padding-top:12px; border-top:1px solid #151f15;
+}
+.credits a { color:#3a5a3a; text-decoration:none; }
+
+/* ── DEBUG RADAR MAP ─────────────────────── */
+#radar-map {
+  position:fixed; top:60px; right:14px; z-index:7;
+  width:340px; height:340px;
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+}
+#radar-map.active { opacity:1; }
+#radar-map canvas {
+  width:100%; height:100%;
+  border:1px solid #1a2a1a;
+  border-radius:50%;
+  background:rgba(5,10,5,0.85);
+}
+#radar-label {
+  text-align:center; font-size:7px; color:#2a4a2a;
+  letter-spacing:2px; margin-top:3px;
+}
+
+/* ── PAUSE OVERLAY ───────────────────────── */
+#pause-screen {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(5,8,5,0.75); z-index:15;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:var(--font-mono);
+}
+#pause-screen.active { display:flex; }
+.pause-title {
+  font-family:var(--font-display);
+  font-size:28px; letter-spacing:8px; color:var(--text-bright);
+  text-shadow:0 0 20px rgba(100,170,100,0.15);
+}
+.pause-hint {
+  font-size:11px; color:var(--text-dim); letter-spacing:3px; margin-top:16px;
+}
+
+/* ── QUIT CONFIRM ────────────────────────── */
+#quit-confirm {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(5,8,5,0.8); z-index:20;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:var(--font-mono);
+}
+#quit-confirm.active { display:flex; }
+.quit-box {
+  background:var(--panel); border:1px solid #4a2a2a;
+  padding:28px 40px; text-align:center;
+}
+.quit-title { font-size:14px; color:#cc6655; letter-spacing:3px; margin-bottom:16px; }
+.quit-hint { font-size:11px; color:var(--text-dim); letter-spacing:2px; }
+.quit-hint .key-badge { margin:0 4px; }
+
+/* ── PERSISTENT LOGO ──────────────────────── */
+#site-logo {
+  position:fixed; bottom:12px; right:14px; z-index:8;
+  width:96px; height:auto; opacity:0.5;
+  pointer-events:none;
+  transition:opacity 0.3s;
+}
+#site-logo:hover { opacity:0.8; }
+
+/* ── COOLDOWN INDICATOR ──────────────────── */
+#cooldown-bar {
+  position:fixed; bottom:68px; left:50%; transform:translateX(-50%);
+  width:120px; height:3px; background:#0a140a;
+  border:1px solid #1a2a1a; z-index:6;
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+  overflow:hidden;
+}
+#cooldown-bar.active { opacity:1; }
+#cooldown-fill {
+  height:100%; width:100%; background:var(--accent);
+  transform-origin:left; transition:transform 0.05s linear;
+}
+
+/* ── HUD KEYS HINT ───────────────────────── */
+.hud-keys {
+  position:fixed; bottom:4px; right:12px; z-index:5;
+  font-size:8px; color:#1a2a1a; letter-spacing:1px;
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+}
+.hud-keys.active { opacity:1; }
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media (max-width:500px) {
+  .panel { padding:20px 18px; }
+  .panel-title { font-size:20px; letter-spacing:5px; }
+  .wave-number { font-size:28px; }
+  .hud-score { font-size:16px; }
+  #horn-indicator { width:260px; }
+}
+</style>
+</head>
+<body>
+
+<img id="site-logo" src="logo.png" alt="AHC">
+<canvas id="game-canvas"></canvas>
+
+<!-- ═══ OVERLAYS ═══ -->
+
+<!-- LOADING -->
+<div id="loading-screen" class="overlay active">
+  <div class="panel">
+    <div class="panel-sub">ACOUSTIC HERITAGE COLLECTIVE</div>
+    <div class="panel-title">SOUND MIRROR</div>
+    <hr class="panel-divider">
+    <div id="loading-log"></div>
+    <div class="progress-bar"><div class="fill" id="loading-fill"></div></div>
+  </div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div id="instructions-screen" class="overlay">
+  <div class="panel" style="max-width:640px">
+    <div class="panel-sub" style="color:#4a6a4a">CLASSIFIED — RAF ACOUSTIC DEFENCE</div>
+    <div class="panel-title">SOUND MIRROR</div>
+    <div class="panel-sub">ACOUSTIC HERITAGE COLLECTIVE — 2026</div>
+    <hr class="panel-divider">
+
+    <div class="briefing-section">
+      <div class="briefing-label">◆ BRIEFING</div>
+      Enemy formations are approaching across the English Channel.
+      You are the listener operator at Abbott's Cliff Sound Mirror, Kent.
+      <br><br>
+      Use your acoustic horn to sweep for engine noise peaks.
+      Detect incoming formations before they breach our defenses.
+    </div>
+
+    <div class="briefing-section" style="border-top:1px solid var(--border); padding-top:12px">
+      <div class="briefing-label">◆ CONTROLS</div>
+      <div class="controls-row">
+        <span class="key-badge">← →</span> or <span class="key-badge">MOUSE</span>
+        <span class="controls-label">Rotate horn &amp; view (360°)</span>
+      </div>
+      <div class="controls-row">
+        <span class="key-badge">SPACE</span>
+        <span class="controls-label" style="margin-left:58px">Confirm detection</span>
+      </div>
+      <div class="controls-row">
+        <span class="key-badge">ESC</span>
+        <span class="controls-label" style="margin-left:72px">Pause</span>
+      </div>
+      <div class="controls-row">
+        <span class="key-badge">Q</span>
+        <span class="controls-label" style="margin-left:88px">Quit mission</span>
+      </div>
+    </div>
+
+    <div class="briefing-section" style="border-top:1px solid var(--border); font-size:10px; color:#6a7a65; line-height:1.75; padding-top:12px">
+      <div class="briefing-label">◆ RULES OF ENGAGEMENT</div>
+      Sweep the horn to find peak engine sound intensity<br>
+      Press SPACE when you hear maximum signal — tolerance varies by wave<br>
+      1.5 second cooldown between detection attempts<br>
+      3 lives per wave — misses and breaches cost a life<br>
+      Detecting at greater distance earns more points<br>
+      Weather conditions will increasingly degrade detection
+    </div>
+
+    <div class="prompt blink">[ PRESS SPACE TO BEGIN MISSION ]</div>
+    <div class="credits">
+      ACOUSTIC HERITAGE COLLECTIVE — <a href="https://acousticheritagecollective.org" target="_blank">acousticheritagecollective.org</a>
+    </div>
+  </div>
+</div>
+
+<!-- WAVE INTRO -->
+<div id="wave-intro" class="overlay">
+  <div class="panel">
+    <div class="panel-sub">INCOMING</div>
+    <div class="wave-number" id="wave-intro-num">WAVE 1</div>
+    <div class="wave-name" id="wave-intro-name">CALM SKIES</div>
+    <div class="wave-prepare">PREPARE YOUR STATION</div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div>
+      <div class="hud-wave-label" id="hud-wave-label">WAVE 1 — CALM SKIES</div>
+      <div class="hud-formation-status idle" id="hud-formation-status">SCANNING...</div>
+    </div>
+    <div>
+      <div class="hud-score" id="hud-score">0</div>
+      <div class="hud-score-label">SCORE</div>
+    </div>
+  </div>
+  <div class="hud-center">
+    <div class="hud-lives" id="hud-lives">
+      <span class="on">♦</span><span class="on">♦</span><span class="on">♦</span>
+    </div>
+    <div class="hud-streak" id="hud-streak"></div>
+  </div>
+</div>
+<div id="hud-message"></div>
+<div id="horn-indicator">
+  <div class="horn-bar">
+    <div class="center-line"></div>
+    <div class="effective-zone" id="horn-zone"></div>
+    <div class="needle" id="horn-needle" style="left:50%"></div>
+  </div>
+  <div class="horn-scale">
+    <span>-180°</span><span>-90°</span><span>0°</span><span>90°</span><span>180°</span>
+  </div>
+  <div class="horn-angle-readout" id="horn-readout">HORN: 0.0°</div>
+</div>
+<div id="cooldown-bar"><div id="cooldown-fill"></div></div>
+
+<!-- DEBUG RADAR MAP -->
+<div id="radar-map">
+  <canvas id="radar-canvas" width="680" height="680"></canvas>
+  <div id="radar-label">DEBUG RADAR</div>
+</div>
+
+<!-- PAUSE -->
+<div id="pause-screen">
+  <div class="pause-title">PAUSED</div>
+  <div class="pause-hint">PRESS <span class="key-badge">ESC</span> TO RESUME</div>
+  <div class="pause-hint" style="margin-top:8px">PRESS <span class="key-badge">Q</span> TO QUIT MISSION</div>
+</div>
+
+<!-- QUIT CONFIRM -->
+<div id="quit-confirm">
+  <div class="quit-box">
+    <div class="quit-title">ABORT MISSION?</div>
+    <div class="quit-hint">
+      <span class="key-badge">Y</span> CONFIRM &nbsp;&nbsp;
+      <span class="key-badge">N</span> CANCEL
+    </div>
+  </div>
+</div>
+
+<!-- HUD KEYS HINT -->
+<div class="hud-keys" id="hud-keys">← → / MOUSE: HORN · SPACE: DETECT · ESC: PAUSE · Q: QUIT</div>
+
+<!-- GAME OVER -->
+<div id="gameover-screen" class="overlay">
+  <div class="panel" style="max-width:520px">
+    <div class="panel-sub" style="color:#6a3a3a">TRANSMISSION ENDED</div>
+    <div class="gameover-title">MISSION OVER</div>
+    <div class="stats-grid">
+      <div><div class="stat-label">FINAL SCORE</div><div class="stat-value" id="go-score">0</div></div>
+      <div><div class="stat-label">WAVE REACHED</div><div class="stat-value" id="go-wave">1</div></div>
+      <div><div class="stat-label">DETECTIONS</div><div class="stat-value small" id="go-detections">0</div></div>
+      <div><div class="stat-label">ACCURACY</div><div class="stat-value small" id="go-accuracy">0%</div></div>
+    </div>
+    <div id="go-input-section">
+      <div style="font-size:10px;color:#6a7a65;letter-spacing:2px;margin-bottom:10px">
+        ENTER YOUR CALLSIGN FOR THE HONOUR ROLL
+      </div>
+      <div class="callsign-row">
+        <input type="text" id="callsign-input" maxlength="12" placeholder="CALLSIGN" autocomplete="off">
+        <button id="submit-btn">SUBMIT</button>
+      </div>
+    </div>
+    <div id="go-submitted" style="display:none">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:2px;margin-top:12px">✓ SCORE RECORDED</div>
+      <div class="prompt blink" style="margin-top:16px">[ PRESS SPACE FOR HONOUR ROLL ]</div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="leaderboard-screen" class="overlay">
+  <div class="panel" style="max-width:520px">
+    <div class="panel-sub">TOP LISTENERS</div>
+    <div class="lb-title">HONOUR ROLL</div>
+    <div class="lb-list" id="lb-list">
+      <div class="lb-empty">No scores recorded yet. Be the first!</div>
+    </div>
+    <div class="prompt blink" style="margin-top:20px">[ PRESS SPACE TO PLAY AGAIN ]</div>
+    <div class="credits">
+      ACOUSTIC HERITAGE COLLECTIVE — <a href="https://acousticheritagecollective.org" target="_blank">acousticheritagecollective.org</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ THREE.JS ═══ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  SOUND MIRROR GAME — Standalone
+//  Acoustic Heritage Collective, 2026
+// ═══════════════════════════════════════════════════════════════
+
+(function() {
+"use strict";
+
+// ── CONSTANTS ──────────────────────────────────────────────────
+const FIELD_DEPTH   = 40000;    // 40km
+const FIELD_WIDTH   = 10000;    // ±10km spawn width (gives ~14° at 40km, within detection range)
+const TARGET_WIDTH  = 3000;     // ±3km at y=0
+const SPEED         = 50;       // 50 m/s (180 km/h)
+const SOURCE_DB     = 140;      // dB @ 1m
+const MIRROR_MAX_ANGLE = 16;
+const HORN_RANGE    = 15;       // ±15°
+const BREACH_ANGLE  = 30;
+const BREACH_DIST   = 5000;     // 5km
+const MAX_LIVES     = 3;
+const BASE_PTS      = 100;
+const MISS_COOLDOWN = 1.5;     // seconds between detection attempts
+const MISS_PENALTY  = 50;      // points lost per miss
+
+const MIRROR_GAIN = [
+  [0,18],[1,17],[2,16],[3,16],[4,16],[5,15],[6,14],[7,13],
+  [8,12],[9,11],[10,10],[11,9],[12,6],[13,3],[14,3],[15,2],[16,0]
+];
+
+const WAVES = [
+  {n:"Calm Skies",     si:8,  mx:2,  w:"clear",         ab:0,  tol:1.5 },
+  {n:"First Patrol",   si:6,  mx:3,  w:"clear",         ab:0,  tol:1.5 },
+  {n:"Morning Watch",  si:5,  mx:4,  w:"seagulls",      ab:3,  tol:1.5 },
+  {n:"Channel Breeze", si:4,  mx:5,  w:"light_wind",    ab:5,  tol:1.25},
+  {n:"Coastal Winds",  si:4,  mx:6,  w:"wind",          ab:8,  tol:1.25},
+  {n:"Growing Threat", si:3,  mx:7,  w:"wind_seagulls", ab:10, tol:1   },
+  {n:"Rain Front",     si:3,  mx:8,  w:"rain",          ab:12, tol:1   },
+  {n:"Heavy Squall",   si:2,  mx:9,  w:"rain_wind",     ab:15, tol:1   },
+  {n:"Storm Warning",  si:2,  mx:10, w:"storm",         ab:18, tol:0.75},
+  {n:"The Blitz",      si:1.5,mx:12, w:"thunder_storm", ab:22, tol:0.75},
+];
+
+function getWave(i) {
+  if (i < WAVES.length) return WAVES[i];
+  const e = i - WAVES.length + 1;
+  return {n:"Endless War "+e, si:Math.max(1,1.5-e*0.1), mx:12+e*2,
+    w:"thunder_storm", ab:25+e, tol:Math.max(0.3,0.75-e*0.05)};
+}
+function detectionsNeeded(i) { return i<3?3:i<6?4:i<9?5:6; }
+function weatherMult(i) { return i<3?1:i<5?1.3:i<7?1.6:i<9?2:3; }
+
+// ── UTILS ──────────────────────────────────────────────────────
+function dbGain(db) { return Math.pow(10, db/20); }
+function distAtt(d) { return d<1 ? 0 : -20*Math.log10(d); }
+function mirrorGain(ang) {
+  const a = Math.abs(ang);
+  if (a>=MIRROR_MAX_ANGLE) return 0;
+  for (let i=0;i<MIRROR_GAIN.length-1;i++) {
+    const [a0,g0]=MIRROR_GAIN[i], [a1,g1]=MIRROR_GAIN[i+1];
+    if (a>=a0 && a<=a1) { const t=(a-a0)/(a1-a0); return g0+t*(g1-g0); }
+  }
+  return 0;
+}
+function formAngle(x,y) { return Math.atan2(x,y)*(180/Math.PI); }
+function formDist(x,y) { return Math.sqrt(x*x+y*y); }
+function clamp(v,lo,hi) { return Math.max(lo,Math.min(hi,v)); }
+
+// ── DOM HELPERS ────────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+function showOverlay(id) {
+  document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
+  if (id) $(id).classList.add('active');
+}
+function showHud(on) {
+  $('hud').classList.toggle('active', on);
+  $('horn-indicator').classList.toggle('active', on);
+  $('radar-map').classList.toggle('active', on);
+  $('cooldown-bar').classList.toggle('active', on);
+  $('hud-keys').classList.toggle('active', on);
+}
+
+// ── LEADERBOARD (localStorage) ─────────────────────────────────
+// Using localStorage for real hosting (persistent storage API is claude.ai only)
+const LB_KEY = 'soundmirror_leaderboard';
+
+function loadLB() {
+  try {
+    const d = localStorage.getItem(LB_KEY);
+    return d ? JSON.parse(d) : [];
+  } catch(e) { return []; }
+}
+function saveLB(entries) {
+  try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch(e) {}
+}
+function addScore(entry) {
+  const lb = loadLB();
+  lb.push(entry);
+  lb.sort((a,b) => b.score - a.score);
+  saveLB(lb.slice(0, 50)); // keep top 50
+}
+function getTop10() { return loadLB().slice(0,10); }
+
+function renderLB() {
+  const list = $('lb-list');
+  const top = getTop10();
+  if (!top.length) {
+    list.innerHTML = '<div class="lb-empty">No scores recorded yet. Be the first!</div>';
+    return;
+  }
+  list.innerHTML = top.map((e,i) => {
+    const cls = i===0?'rank1':i<3?'rank2 rank3':'';
+    return `<div class="lb-row ${cls}">
+      <div class="lb-rank">${i+1}.</div>
+      <div class="lb-name">${e.name}</div>
+      <div class="lb-score">${e.score.toLocaleString()}</div>
+      <div class="lb-wave">W${e.wave}</div>
+    </div>`;
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════════
+class AudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.master = null;
+    this.fBus = null; // formation bus
+    this.nodes = new Map();
+    this.ok = false;
+    this._sgInt = null;
+    this._thTimer = 0;
+  }
+
+  init() {
+    if (this.ok) return;
+    this.ctx = new (window.AudioContext||window.webkitAudioContext)();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.75;
+    this.master.connect(this.ctx.destination);
+
+    // Formation bus → stethoscope chain → master
+    this.fBus = this.ctx.createGain();
+    this.fBus.gain.value = 1;
+
+    // Stethoscope: lowpass 1kHz
+    this.sLP = this.ctx.createBiquadFilter();
+    this.sLP.type='lowpass'; this.sLP.frequency.value=1000; this.sLP.Q.value=0.7;
+
+    // Stethoscope: peaking 70Hz +12dB (bass zone 30-120Hz)
+    this.sPk1 = this.ctx.createBiquadFilter();
+    this.sPk1.type='peaking'; this.sPk1.frequency.value=70;
+    this.sPk1.gain.value=12; this.sPk1.Q.value=1.2;
+
+    // Horn: peaking 50Hz +6dB
+    this.sPk2 = this.ctx.createBiquadFilter();
+    this.sPk2.type='peaking'; this.sPk2.frequency.value=50;
+    this.sPk2.gain.value=6; this.sPk2.Q.value=3;
+
+    this.fBus.connect(this.sLP).connect(this.sPk1).connect(this.sPk2).connect(this.master);
+
+    // Ambient
+    this._initAmbient();
+    this.ok = true;
+  }
+
+  _pinkBuf(dur) {
+    const sz = this.ctx.sampleRate*dur;
+    const buf = this.ctx.createBuffer(1, sz, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<sz;i++){
+      const w=Math.random()*2-1;
+      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+      b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+      b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+      d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.06;
+      b6=w*0.115926;
+    }
+    return buf;
+  }
+
+  _initAmbient() {
+    // Coastal ambient: pink noise through lowpass
+    const nb = this._pinkBuf(3);
+    this.ambSrc = this.ctx.createBufferSource();
+    this.ambSrc.buffer = nb; this.ambSrc.loop = true;
+    this.ambGain = this.ctx.createGain();
+    this.ambGain.gain.value = dbGain(50-80);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type='lowpass'; lp.frequency.value=800; lp.Q.value=0.5;
+    this.ambSrc.connect(lp).connect(this.ambGain).connect(this.master);
+    this.ambSrc.start();
+
+    // Weather noise layer
+    this.wxGain = this.ctx.createGain();
+    this.wxGain.gain.value = 0;
+    const wn = this.ctx.createBufferSource();
+    wn.buffer = this._pinkBuf(4); wn.loop = true;
+    const wlp = this.ctx.createBiquadFilter();
+    wlp.type='lowpass'; wlp.frequency.value=2000;
+    wn.connect(wlp).connect(this.wxGain).connect(this.master);
+    wn.start();
+
+    // Seagull gain
+    this.sgGain = this.ctx.createGain();
+    this.sgGain.gain.value = 0;
+    this.sgGain.connect(this.master);
+  }
+
+  setWeather(boostDB, weather) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const wv = boostDB>0 ? dbGain(boostDB-60) : 0;
+    this.wxGain.gain.setTargetAtTime(wv, t, 2);
+    if (weather.includes('seagull')) this._startSG();
+    else { this.sgGain.gain.setTargetAtTime(0,t,0.5); this._stopSG(); }
+  }
+
+  _startSG() {
+    if (this._sgInt) return;
+    const fire = () => {
+      if (!this.ctx) return;
+      const o=this.ctx.createOscillator(); o.type='sine';
+      const bf=2000+Math.random()*1500; o.frequency.value=bf;
+      const g=this.ctx.createGain(); g.gain.value=0;
+      const t=this.ctx.currentTime;
+      g.gain.setTargetAtTime(0.015,t,0.05);
+      g.gain.setTargetAtTime(0,t+0.15+Math.random()*0.2,0.08);
+      o.frequency.setTargetAtTime(bf*1.3,t,0.1);
+      o.frequency.setTargetAtTime(bf*0.7,t+0.2,0.15);
+      o.connect(g).connect(this.master);
+      o.start(t); o.stop(t+0.6);
+      this._sgInt = setTimeout(fire, 2000+Math.random()*5000);
+    };
+    fire();
+  }
+  _stopSG() { if(this._sgInt){clearTimeout(this._sgInt);this._sgInt=null;} }
+
+  thunder() {
+    if (!this.ctx) return;
+    const t=this.ctx.currentTime;
+    const sz=this.ctx.sampleRate*2;
+    const buf=this.ctx.createBuffer(1,sz,this.ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<sz;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(this.ctx.sampleRate*0.8));
+    const s=this.ctx.createBufferSource(); s.buffer=buf;
+    const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=120; lp.Q.value=1;
+    const g=this.ctx.createGain(); g.gain.value=0.25;
+    s.connect(lp).connect(g).connect(this.master);
+    s.start(t); s.stop(t+2.5);
+  }
+
+  // ── Formation audio ──
+  addFormation(id) {
+    if (!this.ctx) return;
+    const o1=this.ctx.createOscillator(); o1.type='sawtooth';
+    o1.frequency.value=55+Math.random()*5;
+    const o2=this.ctx.createOscillator(); o2.type='square';
+    o2.frequency.value=27+Math.random()*3;
+    const mix=this.ctx.createGain(); mix.gain.value=0.4;
+    const dg=this.ctx.createGain(); dg.gain.value=0;
+    const dlp=this.ctx.createBiquadFilter(); dlp.type='lowpass';
+    dlp.frequency.value=8000; dlp.Q.value=0.5;
+    const mg=this.ctx.createGain(); mg.gain.value=0;
+    o1.connect(mix); o2.connect(mix);
+    mix.connect(dg).connect(dlp).connect(mg).connect(this.fBus);
+    o1.start(); o2.start();
+    this.nodes.set(id, {o1,o2,mix,dg,dlp,mg});
+  }
+
+  updateFormation(id, dist, detAngle) {
+    const n=this.nodes.get(id);
+    if(!n||!this.ctx) return;
+    const t=this.ctx.currentTime;
+    // Distance attenuation
+    const att = distAtt(dist);
+    const lvl = SOURCE_DB + att;
+    const dv = Math.max(0, dbGain(lvl-100));
+    n.dg.gain.setTargetAtTime(dv, t, 0.05);
+    // Atmospheric lowpass
+    const dr = Math.min(dist/FIELD_DEPTH, 1);
+    const fc = 8000-dr*7500;
+    n.dlp.frequency.setTargetAtTime(Math.max(200,fc), t, 0.05);
+    // Mirror gain
+    const mdb = mirrorGain(detAngle);
+    n.mg.gain.setTargetAtTime(dbGain(mdb)*0.5, t, 0.05);
+  }
+
+  removeFormation(id) {
+    const n=this.nodes.get(id);
+    if(!n) return;
+    const t=this.ctx.currentTime;
+    n.dg.gain.setTargetAtTime(0,t,0.1);
+    setTimeout(() => {
+      try{n.o1.stop();n.o2.stop();n.o1.disconnect();n.o2.disconnect();
+        n.mix.disconnect();n.dg.disconnect();n.dlp.disconnect();n.mg.disconnect();}catch(e){}
+      this.nodes.delete(id);
+    }, 300);
+  }
+
+  // ── SFX ──
+  sfxDetect() {
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=880;
+    const g=this.ctx.createGain(); g.gain.value=0;
+    g.gain.setTargetAtTime(0.12,t,0.01); g.gain.setTargetAtTime(0,t+0.15,0.05);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t+0.4);
+    setTimeout(()=>{
+      const o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=1320;
+      const g2=this.ctx.createGain(); g2.gain.value=0;
+      const t2=this.ctx.currentTime;
+      g2.gain.setTargetAtTime(0.12,t2,0.01); g2.gain.setTargetAtTime(0,t2+0.2,0.05);
+      o2.connect(g2).connect(this.master); o2.start(t2); o2.stop(t2+0.5);
+    },120);
+  }
+  sfxMiss() {
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=200;
+    o.frequency.setTargetAtTime(100,t,0.15);
+    const g=this.ctx.createGain(); g.gain.value=0;
+    g.gain.setTargetAtTime(0.1,t,0.01); g.gain.setTargetAtTime(0,t+0.3,0.1);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t+0.6);
+  }
+  sfxBreach() {
+    const t=this.ctx.currentTime;
+    for(let i=0;i<3;i++){
+      const o=this.ctx.createOscillator(); o.type='square'; o.frequency.value=150-i*30;
+      const g=this.ctx.createGain(); g.gain.value=0;
+      const s=t+i*0.2;
+      g.gain.setTargetAtTime(0.1,s,0.01); g.gain.setTargetAtTime(0,s+0.15,0.05);
+      o.connect(g).connect(this.master); o.start(s); o.stop(s+0.3);
+    }
+  }
+  sfxGameover() {
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=300;
+    o.frequency.linearRampToValueAtTime(50,t+1.5);
+    const g=this.ctx.createGain(); g.gain.value=0.12;
+    g.gain.setTargetAtTime(0,t+1,0.3);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t+2);
+  }
+
+  destroy() {
+    this._stopSG();
+    for(const[id] of this.nodes) this.removeFormation(id);
+    if(this.ctx){this.ctx.close();this.ctx=null;}
+    this.ok=false;
+  }
+
+  muteAll() {
+    if (!this.ctx) return;
+    // Suspend stops ALL audio processing — complete silence
+    if (this.ctx.state === 'running') this.ctx.suspend();
+  }
+
+  unmuteAll() {
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  }
+
+  stopAll() {
+    // Kill all formation audio + ambient for game over / quit
+    for(const[id] of this.nodes) this.removeFormation(id);
+    this._stopSG();
+    if (this.ambGain) this.ambGain.gain.value = 0;
+    if (this.wxGain) this.wxGain.gain.value = 0;
+    if (this.sgGain) this.sgGain.gain.value = 0;
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  3D SCENE — First-person view from operator position
+// ═══════════════════════════════════════════════════════════════
+class Scene3D {
+  constructor(canvas) {
+    this.cv = canvas;
+    this.ready = false;
+    this.viewAngle = 0; // current horn/view angle in degrees
+  }
+
+  init() {
+    const T = THREE;
+    this.r = new T.WebGLRenderer({canvas:this.cv, antialias:true, alpha:false});
+    this.r.setSize(this.cv.clientWidth, this.cv.clientHeight);
+    this.r.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    this.r.shadowMap.enabled = true;
+    this.r.setClearColor(0x0d1520);
+
+    this.sc = new T.Scene();
+    this.sc.fog = new T.FogExp2(0x0d1520, 0.00012);
+
+    // Camera = operator's eyes, at head height (~1.7m above ground + standing position)
+    // Operator is at (0, 0, -4) looking towards mirror at (0, 0, 0) and beyond to the sea
+    this.cam = new T.PerspectiveCamera(65, this.cv.clientWidth/this.cv.clientHeight, 0.1, 50000);
+    // Eye height ~3.5m (standing on slight elevation near mirror)
+    this.camPivot = new T.Group();
+    this.camPivot.position.set(0, 3.5, -4); // operator position
+    this.cam.position.set(0, 0, 0); // relative to pivot
+    this.cam.lookAt(0, 0.5, 10); // look forward towards mirror and sea
+    this.camPivot.add(this.cam);
+    this.sc.add(this.camPivot);
+
+    // Horn attached to camera view (always visible in first person, bottom of screen)
+    this._buildHornFP(T);
+
+    // Lights
+    this.sc.add(new T.AmbientLight(0x3a5570, 0.4));
+    const dl = new T.DirectionalLight(0xffeedd, 0.7);
+    dl.position.set(-15, 25, 10); dl.castShadow=true; this.sc.add(dl);
+    const rl = new T.DirectionalLight(0x6a90b4, 0.25);
+    rl.position.set(10, 5, -10); this.sc.add(rl);
+
+    // Ground (cliff top)
+    const gnd = new T.Mesh(
+      new T.PlaneGeometry(400, 400),
+      new T.MeshStandardMaterial({color:0x1e3a12, roughness:0.92, metalness:0})
+    );
+    gnd.rotation.x=-Math.PI/2; gnd.receiveShadow=true; this.sc.add(gnd);
+
+    // Sea — far ahead (positive Z direction = towards enemy)
+    const sea = new T.Mesh(
+      new T.PlaneGeometry(80000, 80000),
+      new T.MeshStandardMaterial({color:0x0c1e30, roughness:0.3, metalness:0.1, transparent:true, opacity:0.9})
+    );
+    sea.rotation.x=-Math.PI/2; sea.position.set(0, -12, 400); this.sc.add(sea);
+
+    // Sky dome
+    const sky = new T.Mesh(
+      new T.SphereGeometry(30000, 24, 12),
+      new T.MeshBasicMaterial({color:0x0d1a28, side:T.BackSide})
+    );
+    this.sc.add(sky);
+
+    // Stars
+    const starsGeo = new T.BufferGeometry();
+    const starPos = [];
+    for(let i=0;i<600;i++){
+      const th=Math.random()*Math.PI*2, ph=Math.random()*Math.PI*0.5;
+      const r=20000+Math.random()*5000;
+      starPos.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
+    }
+    starsGeo.setAttribute('position', new T.Float32BufferAttribute(starPos,3));
+    this.sc.add(new T.Points(starsGeo, new T.PointsMaterial({color:0x667788, size:15})));
+
+    // Build mirror (in front of operator)
+    this._buildMirror(T);
+
+    this.ready = true;
+  }
+
+  _buildMirror(T) {
+    const g = new T.Group();
+    const cMat = new T.MeshStandardMaterial({color:0x787868, roughness:0.95, metalness:0});
+
+    // Concrete block — the mirror is a vertical wall
+    // Approximately 7m wide, 7.5m tall, 3.5m deep
+    const block = new T.Mesh(new T.BoxGeometry(7.2, 7.8, 3.8), cMat);
+    block.position.y = 3.9;
+    block.castShadow = true; block.receiveShadow = true;
+    g.add(block);
+
+    // Spherical dish: 6.096m diameter → opening radius 3.048m
+    // Radius of curvature: 4.572m
+    // The dish is VERTICAL — carved into the face of the concrete block
+    // It faces NEGATIVE Z (towards the operator), reflecting sound from +Z (the sea)
+    const R = 4.572, rOpen = 3.048;
+    const thetaMax = Math.asin(rOpen / R);
+    const dishGeo = new T.SphereGeometry(R, 48, 32, 0, Math.PI*2, 0, thetaMax);
+    const dishMat = new T.MeshStandardMaterial({
+      color:0x9a9a88, roughness:0.65, metalness:0.05, side:T.DoubleSide
+    });
+    const dish = new T.Mesh(dishGeo, dishMat);
+
+    // The SphereGeometry with thetaStart=0 creates a cap around +Y axis.
+    // We need it facing -Z (towards operator). 
+    // Rotate: first tilt it so the opening faces -Z
+    dish.rotation.x = Math.PI / 2; // cap now opens towards -Z
+    // Position: center of curvature sphere sits inside the block
+    // The cap opening should be flush with the front face of the block
+    const capDepth = R - R * Math.cos(thetaMax); // how deep the cap is
+    dish.position.y = 4.5; // center height on the wall
+    dish.position.z = -1.9 + capDepth; // front face of block is at z ≈ -1.9
+    g.add(dish);
+
+    // Whole structure tilted 5° (leaning slightly forward)
+    g.rotation.x = -5 * (Math.PI / 180);
+
+    // Mirror at origin, facing +Z (sea), operator at -Z
+    g.position.set(0, 0, 0);
+    this.sc.add(g);
+  }
+
+  _buildHornFP(T) {
+    // First-person horn: attached to camera, like a weapon in FPS
+    this.hornFP = new T.Group();
+    const brass = new T.MeshStandardMaterial({color:0xc89530, roughness:0.3, metalness:0.7, fog:false});
+    const darkMetal = new T.MeshStandardMaterial({color:0x333333, roughness:0.5, metalness:0.5, fog:false});
+
+    // Main tube — goes from near the operator out forward
+    const tube = new T.Mesh(new T.CylinderGeometry(0.025, 0.12, 2.2, 12), brass);
+    tube.rotation.x = Math.PI/2;
+    tube.position.set(0, 0, 1.1);
+    this.hornFP.add(tube);
+
+    // Bell (flared end, far from operator)
+    const bell = new T.Mesh(new T.CylinderGeometry(0.12, 0.35, 0.45, 16), brass);
+    bell.rotation.x = Math.PI/2;
+    bell.position.set(0, 0, 2.35);
+    this.hornFP.add(bell);
+
+    // Bell rim
+    const rim = new T.Mesh(new T.TorusGeometry(0.35, 0.02, 8, 16), brass);
+    rim.position.set(0, 0, 2.58);
+    this.hornFP.add(rim);
+
+    // Earpiece (near end)
+    const ear = new T.Mesh(new T.CylinderGeometry(0.02, 0.03, 0.12, 8), darkMetal);
+    ear.rotation.x = Math.PI/2;
+    ear.position.set(0, 0, -0.08);
+    this.hornFP.add(ear);
+
+    // Stethoscope tube curving down
+    const stetho = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.5, 6), darkMetal);
+    stetho.position.set(0, -0.28, -0.05);
+    stetho.rotation.z = 0.15;
+    this.hornFP.add(stetho);
+
+    // Support bracket
+    const bracket = new T.Mesh(new T.BoxGeometry(0.04, 0.04, 0.5), darkMetal);
+    bracket.position.set(0, -0.08, 0.6);
+    this.hornFP.add(bracket);
+
+    // Position: bottom-center of screen, extending forward
+    // Offset down and forward from camera eye
+    this.hornFP.position.set(0.15, -0.55, 0.8);
+    this.hornFP.rotation.y = 0; // straight ahead
+    this.cam.add(this.hornFP);
+  }
+
+  setViewAngle(deg) {
+    // Rotate the entire camera pivot — this is the first-person head rotation
+    // When horn moves left, view rotates left (you turn your head with the horn)
+    this.viewAngle = deg;
+    if (this.camPivot) {
+      this.camPivot.rotation.y = -deg * (Math.PI / 180);
+    }
+  }
+
+  resize() {
+    if(!this.r) return;
+    const w=this.cv.clientWidth, h=this.cv.clientHeight;
+    this.r.setSize(w,h);
+    this.cam.aspect=w/h; this.cam.updateProjectionMatrix();
+  }
+
+  render() {
+    if(this.r && this.sc && this.cam) this.r.render(this.sc, this.cam);
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  GAME CONTROLLER
+// ═══════════════════════════════════════════════════════════════
+
+const audio = new AudioEngine();
+const canvas = $('game-canvas');
+const scene = new Scene3D(canvas);
+
+let phase = 'loading'; // loading, instructions, wave_intro, playing, gameover, leaderboard
+let state = null;
+let msgTimeout = null;
+
+// ── HUD updates ──
+function updateHUD() {
+  if (!state) return;
+  const w = getWave(state.wave);
+  $('hud-wave-label').textContent = `WAVE ${state.wave+1} — ${w.n.toUpperCase()}`;
+
+  const active = state.formations.filter(f => !f.detected).length;
+  const fs = $('hud-formation-status');
+  if (active > 0) {
+    fs.textContent = `${active} FORMATION${active>1?'S':''} APPROACHING`;
+    fs.className = 'hud-formation-status alert';
+  } else {
+    fs.textContent = 'SCANNING...';
+    fs.className = 'hud-formation-status idle';
+  }
+
+  $('hud-score').textContent = state.score.toLocaleString();
+
+  // Lives
+  let lh = '';
+  for (let i=0;i<MAX_LIVES;i++) lh += `<span class="${i<state.lives?'on':'off'}">♦</span>`;
+  $('hud-lives').innerHTML = lh;
+
+  // Horn — map to full ±180° range, show effective zone
+  const pct = 50 + (state.hornAngle / 180) * 50;
+  $('horn-needle').style.left = pct + '%';
+  const inRange = Math.abs(state.hornAngle) <= HORN_RANGE;
+  $('horn-readout').textContent = `HORN: ${state.hornAngle.toFixed(1)}°${inRange ? '' : '  ⚠ OUT OF MIRROR RANGE'}`;
+  $('horn-readout').style.color = inRange ? '' : '#aa5555';
+}
+
+function showMsg(text, type, dur) {
+  const el = $('hud-message');
+  el.textContent = text;
+  el.className = 'show ' + type;
+  if (msgTimeout) clearTimeout(msgTimeout);
+  msgTimeout = setTimeout(() => { el.className=''; }, dur||2500);
+}
+
+// ── LOADING ──
+async function doLoad() {
+  const log = $('loading-log');
+  const fill = $('loading-fill');
+  let step = 0;
+  const total = 5;
+
+  function addLog(msg, done) {
+    const div = document.createElement('div');
+    div.className = done ? 'done' : 'pending';
+    div.textContent = msg;
+    log.appendChild(div);
+    step++;
+    fill.style.width = Math.round((step/total)*100)+'%';
+  }
+
+  addLog('Initializing audio engine...', false);
+  await new Promise(r => setTimeout(r, 200));
+
+  addLog('Loading Three.js renderer...', false);
+  await new Promise(r => setTimeout(r, 100));
+
+  addLog('Building 3D scene & sound mirror model...', false);
+  scene.init();
+  addLog('3D scene ready ✓', true);
+
+  addLog('All systems nominal ✓', true);
+  fill.style.width = '100%';
+
+  await new Promise(r => setTimeout(r, 600));
+  phase = 'instructions';
+  showOverlay('instructions-screen');
+}
+
+// ── START GAME ──
+function startGame() {
+  // Init audio on first user interaction
+  audio.init();
+
+  state = {
+    wave: 0, score: 0, lives: MAX_LIVES,
+    formations: [], nextId: 0, lastSpawn: 0,
+    waveDet: 0, totalDet: 0, totalAtt: 0,
+    hornAngle: 0, over: false, thunderT: 0,
+    lastAttemptTime: 0,
+    paused: false,
+    quitConfirm: false,
+  };
+
+  showWaveIntro();
+}
+
+function showWaveIntro() {
+  const w = getWave(state.wave);
+  state.lives = MAX_LIVES; // Reset 3 lives each wave
+  $('wave-intro-num').textContent = `WAVE ${state.wave+1}`;
+  $('wave-intro-name').textContent = w.n.toUpperCase();
+  phase = 'wave_intro';
+  showOverlay('wave-intro');
+  showHud(true);
+  updateHUD();
+
+  setTimeout(() => {
+    if (phase === 'wave_intro' && state && !state.over) {
+      phase = 'playing';
+      showOverlay(null);
+
+      // Spawn first formation immediately
+      const id = state.nextId++;
+      const sx = (Math.random()*2-1)*FIELD_WIDTH;
+      const ex = (Math.random()*2-1)*TARGET_WIDTH;
+      const td = Math.sqrt((ex-sx)**2 + FIELD_DEPTH**2);
+      state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:SPEED, detected:false, td, tr:0});
+      audio.addFormation(id);
+      state.lastSpawn = performance.now()/1000;
+      lastT = 0; // reset dt calculation
+      updateHUD();
+    }
+  }, 3000);
+}
+
+// ── END GAME ──
+function endGame() {
+  state.over = true;
+  state.paused = false;
+  state.quitConfirm = false;
+  $('pause-screen').classList.remove('active');
+  $('quit-confirm').classList.remove('active');
+
+  // Resume audio context if suspended, then stop all game audio
+  audio.unmuteAll();
+  audio.stopAll();
+  audio.sfxGameover();
+
+  const acc = state.totalAtt>0 ? Math.round(state.totalDet/state.totalAtt*100) : 0;
+  $('go-score').textContent = state.score.toLocaleString();
+  $('go-wave').textContent = state.wave+1;
+  $('go-detections').textContent = state.totalDet;
+  $('go-accuracy').textContent = acc+'%';
+
+  $('go-input-section').style.display = '';
+  $('go-submitted').style.display = 'none';
+  $('callsign-input').value = '';
+
+  // Store for submit
+  state._goData = {score:state.score, wave:state.wave+1, det:state.totalDet, acc};
+
+  phase = 'gameover';
+  showOverlay('gameover-screen');
+  showHud(false);
+  renderLB();
+
+  setTimeout(() => $('callsign-input').focus(), 400);
+}
+
+// ── SUBMIT SCORE ──
+function submitScore() {
+  const name = $('callsign-input').value.replace(/[^a-zA-Z0-9\s\-_]/g,'').trim().toUpperCase().slice(0,12);
+  if (!name || !state || !state._goData) return;
+  addScore({
+    name, score:state._goData.score, wave:state._goData.wave,
+    detections:state._goData.det, accuracy:state._goData.acc, time:Date.now()
+  });
+  $('go-input-section').style.display = 'none';
+  $('go-submitted').style.display = '';
+  renderLB();
+}
+
+// ── DETECTION ATTEMPT ──
+function attemptDetection() {
+  if (!state || phase !== 'playing' || state.paused) return;
+
+  // Cooldown check
+  const now = performance.now() / 1000;
+  const elapsed = now - state.lastAttemptTime;
+  if (elapsed < MISS_COOLDOWN) {
+    // Still on cooldown — show remaining time
+    showMsg(`⏳ COOLDOWN — ${(MISS_COOLDOWN - elapsed).toFixed(1)}s`, 'miss', 800);
+    return;
+  }
+  state.lastAttemptTime = now;
+
+  state.totalAtt++;
+  const w = getWave(state.wave);
+  const tol = w.tol;
+
+  let best = null, bestDiff = Infinity;
+  for (const f of state.formations) {
+    if (f.detected) continue;
+    const fa = formAngle(f.x, f.y);
+    // Formation must be within mirror effective range (±16°) to be detectable at all
+    if (Math.abs(fa) > MIRROR_MAX_ANGLE) continue;
+    const diff = Math.abs(fa - state.hornAngle);
+    if (diff < bestDiff) { bestDiff = diff; best = f; }
+  }
+
+  if (best && bestDiff <= tol) {
+    // HIT — remove formation immediately
+    best.detected = true;
+    state.totalDet++;
+    state.waveDet++;
+
+    const dist = formDist(best.x, best.y);
+    const distM = dist / 10000;
+    const wM = weatherMult(state.wave);
+    const pts = Math.round(BASE_PTS * distM * wM);
+    state.score += pts;
+
+    // Kill audio and remove from formations array immediately
+    audio.removeFormation(best.id);
+    const idx = state.formations.indexOf(best);
+    if (idx !== -1) state.formations.splice(idx, 1);
+
+    audio.sfxDetect();
+    showMsg(`✓ FORMATION DETECTED — +${pts} pts`, 'detect');
+    updateHUD();
+
+    // Wave advance?
+    if (state.waveDet >= detectionsNeeded(state.wave)) {
+      state.wave++;
+      state.waveDet = 0;
+      showWaveIntro();
+    }
+  } else {
+    // MISS — lose a life
+    state.lives--;
+    const penalty = Math.min(state.score, MISS_PENALTY);
+    state.score -= penalty;
+
+    audio.sfxMiss();
+
+    if (state.lives <= 0) {
+      showMsg('✗ MISSED — NO LIVES LEFT', 'breach');
+      endGame();
+      return;
+    }
+    showMsg(`✗ MISSED ANGLE — LIFE LOST (-${penalty} pts) — ${state.lives} left`, 'miss');
+    updateHUD();
+  }
+}
+
+// ── PAUSE / QUIT ──
+function togglePause() {
+  if (!state || state.over) return;
+  if (state.quitConfirm) return;
+  if (phase === 'wave_intro') return;
+  if (phase !== 'playing' && !state.paused) return;
+
+  state.paused = !state.paused;
+  $('pause-screen').classList.toggle('active', state.paused);
+  if (state.paused) {
+    audio.muteAll();
+  } else {
+    audio.unmuteAll();
+  }
+}
+
+function showQuitConfirm() {
+  if (!state || state.over) return;
+  state.quitConfirm = true;
+  if (!state.paused) {
+    state.paused = true;
+    audio.muteAll();
+  }
+  $('pause-screen').classList.remove('active');
+  $('quit-confirm').classList.add('active');
+}
+
+function confirmQuit(yes) {
+  state.quitConfirm = false;
+  $('quit-confirm').classList.remove('active');
+  if (yes) {
+    endGame();
+  } else {
+    // Return to pause screen
+    $('pause-screen').classList.add('active');
+  }
+}
+
+// ── RADAR MAP ──
+const radarCanvas = $('radar-canvas');
+const rctx = radarCanvas.getContext('2d');
+
+function drawRadar() {
+  if (!state) return;
+  const w = 680, h = 680, cx = w/2, cy = h/2, R = w/2 - 16;
+  rctx.clearRect(0, 0, w, h);
+
+  // Clip to circle
+  rctx.save();
+  rctx.beginPath(); rctx.arc(cx, cy, R+2, 0, Math.PI*2); rctx.clip();
+
+  // Background
+  rctx.fillStyle = 'rgba(5,15,5,0.92)';
+  rctx.fillRect(0, 0, w, h);
+
+  // Range rings (every 10km, max 40km)
+  rctx.strokeStyle = '#1a2a1a';
+  rctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const rr = R * (i/4);
+    rctx.beginPath(); rctx.arc(cx, cy, rr, 0, Math.PI*2); rctx.stroke();
+  }
+
+  // Range labels
+  rctx.fillStyle = '#1e3e1e';
+  rctx.font = '14px monospace';
+  rctx.textAlign = 'center';
+  for (let i = 1; i <= 4; i++) {
+    rctx.fillText((i*10)+'km', cx+20, cy - R*(i/4) + 14);
+  }
+
+  // Cross hairs
+  rctx.strokeStyle = '#152515';
+  rctx.lineWidth = 0.5;
+  rctx.beginPath(); rctx.moveTo(cx, cy-R); rctx.lineTo(cx, cy+R); rctx.stroke();
+  rctx.beginPath(); rctx.moveTo(cx-R, cy); rctx.lineTo(cx+R, cy); rctx.stroke();
+
+  // Angle reference lines every 5°
+  rctx.strokeStyle = '#0e1e0e';
+  rctx.lineWidth = 0.5;
+  for (let deg = -30; deg <= 30; deg += 5) {
+    if (deg === 0) continue;
+    const a = (-90 + deg) * Math.PI / 180;
+    rctx.beginPath();
+    rctx.moveTo(cx, cy);
+    rctx.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R);
+    rctx.stroke();
+  }
+
+  // Angle labels at edge
+  rctx.fillStyle = '#1a3a1a';
+  rctx.font = '11px monospace';
+  for (let deg = -30; deg <= 30; deg += 10) {
+    const a = (-90 + deg) * Math.PI / 180;
+    const lx = cx + Math.cos(a)*(R+1) * 0.92;
+    const ly = cy + Math.sin(a)*(R+1) * 0.92;
+    rctx.fillText(deg+'°', lx, ly);
+  }
+
+  // Breach zone boundary (±30°) — red lines
+  rctx.strokeStyle = '#3a1a1a';
+  rctx.lineWidth = 2;
+  for (const sign of [-1, 1]) {
+    const a = (-90 + sign * BREACH_ANGLE) * Math.PI / 180;
+    rctx.beginPath();
+    rctx.moveTo(cx, cy);
+    rctx.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R);
+    rctx.stroke();
+  }
+
+  // Mirror effective zone (±16°) — filled
+  rctx.fillStyle = 'rgba(40,80,40,0.07)';
+  const maRad = MIRROR_MAX_ANGLE * Math.PI / 180;
+  rctx.beginPath();
+  rctx.moveTo(cx, cy);
+  rctx.arc(cx, cy, R, -Math.PI/2 - maRad, -Math.PI/2 + maRad);
+  rctx.closePath();
+  rctx.fill();
+  // Mirror zone border
+  rctx.strokeStyle = '#2a4a2a';
+  rctx.lineWidth = 1;
+  for (const sign of [-1, 1]) {
+    const a = (-90 + sign * MIRROR_MAX_ANGLE) * Math.PI / 180;
+    rctx.beginPath(); rctx.moveTo(cx, cy);
+    rctx.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R);
+    rctx.stroke();
+  }
+
+  // 5km breach distance ring
+  const br5 = (BREACH_DIST / FIELD_DEPTH) * R;
+  rctx.strokeStyle = 'rgba(180,60,60,0.3)';
+  rctx.lineWidth = 1;
+  rctx.setLineDash([4,4]);
+  rctx.beginPath(); rctx.arc(cx, cy, br5, 0, Math.PI*2); rctx.stroke();
+  rctx.setLineDash([]);
+  rctx.fillStyle = '#3a1a1a';
+  rctx.font = '10px monospace';
+  rctx.fillText('5km', cx + br5 + 4, cy - 2);
+
+  // Scanning beam (horn angle ±tolerance)
+  const waveDef = getWave(state.wave);
+  const hornRad = state.hornAngle * Math.PI / 180;
+  const beamAngle = -Math.PI/2 + hornRad;
+  const tolRad = waveDef.tol * Math.PI / 180;
+  // Tolerance cone
+  rctx.fillStyle = 'rgba(100,200,100,0.1)';
+  rctx.beginPath();
+  rctx.moveTo(cx, cy);
+  rctx.arc(cx, cy, R, beamAngle - tolRad, beamAngle + tolRad);
+  rctx.closePath();
+  rctx.fill();
+  // Beam center line
+  rctx.strokeStyle = 'rgba(100,220,100,0.6)';
+  rctx.lineWidth = 2;
+  rctx.beginPath();
+  rctx.moveTo(cx, cy);
+  rctx.lineTo(cx + Math.cos(beamAngle)*R, cy + Math.sin(beamAngle)*R);
+  rctx.stroke();
+
+  // Formations — POLAR mapping: angle → angular position, distance → radial position
+  for (const f of state.formations) {
+    const dist = formDist(f.x, f.y);
+    const ang = formAngle(f.x, f.y); // degrees
+
+    // Map to radar: angle from top (0° = up), distance normalized to FIELD_DEPTH
+    const radarAngle = (-90 + ang) * Math.PI / 180; // convert to canvas angle
+    const radarDist = Math.min(dist / FIELD_DEPTH, 1) * R;
+
+    const px = cx + Math.cos(radarAngle) * radarDist;
+    const py = cy + Math.sin(radarAngle) * radarDist;
+
+    if (f.detected) {
+      // Detected: dim green
+      rctx.fillStyle = 'rgba(80,150,80,0.4)';
+      rctx.beginPath(); rctx.arc(px, py, 5, 0, Math.PI*2); rctx.fill();
+    } else {
+      // Active: bright red blip
+      rctx.fillStyle = '#cc4444';
+      rctx.beginPath(); rctx.arc(px, py, 6, 0, Math.PI*2); rctx.fill();
+      // Glow
+      rctx.fillStyle = 'rgba(220,60,60,0.25)';
+      rctx.beginPath(); rctx.arc(px, py, 14, 0, Math.PI*2); rctx.fill();
+
+      // Angle line from center
+      rctx.strokeStyle = 'rgba(200,80,80,0.12)';
+      rctx.lineWidth = 0.5;
+      rctx.beginPath(); rctx.moveTo(cx,cy); rctx.lineTo(px,py); rctx.stroke();
+
+      // Distance + angle label
+      rctx.fillStyle = '#aa5555';
+      rctx.font = '12px monospace';
+      rctx.textAlign = 'left';
+      rctx.fillText(`${(dist/1000).toFixed(1)}km`, px+12, py-4);
+      rctx.fillText(`${ang.toFixed(1)}°`, px+12, py+10);
+    }
+  }
+
+  // Mirror position (center dot)
+  rctx.fillStyle = '#5a9a5a';
+  rctx.beginPath(); rctx.arc(cx, cy, 5, 0, Math.PI*2); rctx.fill();
+  rctx.fillStyle = '#3a6a3a';
+  rctx.font = '10px monospace';
+  rctx.textAlign = 'center';
+  rctx.fillText('MIRROR', cx, cy+16);
+
+  rctx.restore();
+}
+
+// ── COOLDOWN BAR ──
+function updateCooldownBar() {
+  if (!state) return;
+  const now = performance.now() / 1000;
+  const elapsed = now - state.lastAttemptTime;
+  const ratio = Math.min(elapsed / MISS_COOLDOWN, 1);
+  $('cooldown-fill').style.transform = `scaleX(${ratio})`;
+  $('cooldown-fill').style.background = ratio >= 1 ? 'var(--accent)' : '#8a6a3a';
+}
+
+// ── MAIN LOOP ──
+let lastT = 0;
+
+function gameLoop(now) {
+  requestAnimationFrame(gameLoop);
+
+  // Always render 3D
+  if (scene.ready) scene.render();
+
+  // Update cooldown bar when playing (even when paused so you can see it)
+  if (state && (phase === 'playing' || phase === 'wave_intro')) {
+    updateCooldownBar();
+    drawRadar();
+  }
+
+  if (phase !== 'playing' || !state || state.over || state.paused) return;
+
+  const t = now / 1000;
+  if (lastT === 0) lastT = t;
+  const dt = Math.min(t - lastT, 0.1);
+  lastT = t;
+
+  const w = getWave(state.wave);
+
+  // ── Spawn ──
+  const activeCount = state.formations.filter(f => !f.detected).length;
+  if (t - state.lastSpawn >= w.si && activeCount < w.mx) {
+    const id = state.nextId++;
+    const sx = (Math.random()*2-1)*FIELD_WIDTH;
+    const ex = (Math.random()*2-1)*TARGET_WIDTH;
+    const td = Math.sqrt((ex-sx)**2 + FIELD_DEPTH**2);
+    state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:SPEED, detected:false, td, tr:0});
+    audio.addFormation(id);
+    state.lastSpawn = t;
+  }
+
+  // ── Update formations ──
+  for (let i=state.formations.length-1; i>=0; i--) {
+    const f = state.formations[i];
+    f.tr += SPEED * dt;
+    const p = Math.min(f.tr / f.td, 1);
+    f.x = f.sx + (f.ex - f.sx) * p;
+    f.y = f.sy + (f.ey - f.sy) * p;
+
+    const dist = formDist(f.x, f.y);
+    const fa = formAngle(f.x, f.y);
+    const da = fa - state.hornAngle;
+
+    audio.updateFormation(f.id, dist, da);
+
+    // Breach check
+    if (!f.detected && (dist < BREACH_DIST || Math.abs(fa) > BREACH_ANGLE || f.y <= 0)) {
+      state.lives--;
+      audio.sfxBreach();
+      audio.removeFormation(f.id);
+      state.formations.splice(i, 1);
+      if (state.lives <= 0) {
+        showMsg('⚠ BREACH — NO LIVES LEFT', 'breach');
+        endGame(); return;
+      }
+      showMsg(`⚠ BREACH — LIFE LOST — ${state.lives} left`, 'breach');
+      updateHUD();
+      continue;
+    }
+  }
+
+  // Weather
+  audio.setWeather(w.ab, w.w);
+
+  // Thunder
+  if (w.w.includes('thunder')) {
+    state.thunderT -= dt;
+    if (state.thunderT <= 0) { audio.thunder(); state.thunderT = 8+Math.random()*15; }
+  }
+
+  // Draw radar & update HUD
+  updateHUD();
+}
+
+// ── INPUT ──
+window.addEventListener('keydown', function(e) {
+  // ── QUIT CONFIRM takes priority ──
+  if (state && state.quitConfirm) {
+    if (e.code === 'KeyY') { confirmQuit(true); return; }
+    if (e.code === 'KeyN' || e.code === 'Escape') { confirmQuit(false); return; }
+    return; // block all other input
+  }
+
+  // ── PAUSE ──
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    if (phase === 'playing' || (state && state.paused)) {
+      togglePause();
+    }
+    return;
+  }
+
+  // ── QUIT ──
+  if (e.code === 'KeyQ') {
+    // From leaderboard or gameover-submitted → back to instructions
+    if (phase === 'leaderboard') {
+      phase = 'instructions';
+      showOverlay('instructions-screen');
+      showHud(false);
+      return;
+    }
+    if (phase === 'gameover' && $('go-submitted').style.display !== 'none') {
+      phase = 'instructions';
+      showOverlay('instructions-screen');
+      showHud(false);
+      return;
+    }
+    // From playing → pause + quit confirm
+    if (state && state.paused && !state.quitConfirm) {
+      showQuitConfirm();
+    } else if (state && phase === 'playing' && !state.paused) {
+      togglePause();
+      showQuitConfirm();
+    }
+    return;
+  }
+
+  // ── Block input while paused ──
+  if (state && state.paused) return;
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (phase === 'instructions') { startGame(); return; }
+    if (phase === 'playing') { attemptDetection(); return; }
+    if (phase === 'gameover') {
+      // If submitted, go to leaderboard
+      if ($('go-submitted').style.display !== 'none') {
+        phase = 'leaderboard';
+        showOverlay('leaderboard-screen');
+        renderLB();
+      }
+      return;
+    }
+    if (phase === 'leaderboard') { startGame(); return; }
+  }
+
+  if (e.code === 'Enter' && phase === 'gameover') {
+    submitScore();
+    return;
+  }
+
+  if (state && phase === 'playing') {
+    // Arrow keys = move horn/view together
+    const step = e.shiftKey ? 0.2 : 0.5;
+    if (e.code === 'ArrowLeft') {
+      state.hornAngle = clamp(state.hornAngle - step, -180, 180);
+      scene.setViewAngle(state.hornAngle);
+    }
+    if (e.code === 'ArrowRight') {
+      state.hornAngle = clamp(state.hornAngle + step, -180, 180);
+      scene.setViewAngle(state.hornAngle);
+    }
+  }
+});
+
+// Mouse control — rotates horn/view, reduced sensitivity
+window.addEventListener('mousemove', function(e) {
+  if (!state || phase !== 'playing' || state.paused) return;
+  const rect = canvas.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const rel = (e.clientX - cx) / (rect.width / 2);
+  // Sensitivity: full mouse range maps to ±60° (was ±180°)
+  // You need to move the mouse more to sweep — feels heavier
+  state.hornAngle = rel * 60;
+  scene.setViewAngle(state.hornAngle);
+});
+
+// Submit button
+$('submit-btn').addEventListener('click', submitScore);
+
+// Resize
+window.addEventListener('resize', () => scene.resize());
+
+// ── BOOT ──
+requestAnimationFrame(gameLoop);
+doLoad();
+
+})();
+</script>
+</body>
+</html>
