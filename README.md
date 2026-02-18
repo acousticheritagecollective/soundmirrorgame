@@ -13,6 +13,9 @@ Unlike traditional war games that focus on violence and destruction, Phantoms in
 
 This project represents a novel approach to acoustic heritage safeguarding, moving beyond conventional impulse response documentation to create a fully interactive, historically-grounded virtual environment. By combining academic rigor with game design, Phantoms in the Sky offers an alternative method of historical media reception—one that engages players viscerally with the acoustic realities of pre-radar air defense while honoring the fears, anxieties, and listening practices of those who operated these monumental concrete structures.
 
+<img width="3024" height="1606" alt="Screenshot 2026-02-18 at 09 46 52" src="https://github.com/user-attachments/assets/7c637ad8-b307-44c6-838a-30377e1cf664" />
+
+
 ---
 
 ## 2. HISTORICAL BACKGROUND
@@ -259,6 +262,7 @@ The game interface provides essential information:
 ## 4. CREDITS
 
 ### Research and Field Measurements
+![01](https://github.com/user-attachments/assets/fb96513d-69c9-4d66-90a1-57e8996164d3)
 
 **In-Situ Measurements at Abbot's Cliff Sound Mirror (October 2022)**
 - Ginebra Raventós
@@ -266,6 +270,8 @@ The game interface provides essential information:
 - Edgardo Gómez
 
 ### Academic Research
+<img width="1634" height="771" alt="02" src="https://github.com/user-attachments/assets/86d13d8c-c348-4921-bd4f-66ec2a4cacdc" />
+
 
 **Original Research by The Acoustic Heritage Collective**
 - Marx E.
