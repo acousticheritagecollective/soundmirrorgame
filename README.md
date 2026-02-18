@@ -1,361 +1,348 @@
-# SOUND MIRROR — Asset Replacement Manual
-### Acoustic Heritage Collective, 2026
+# PHANTOMS IN THE SKY
+## An Acoustic Heritage Game of War Without Violence
 
 ---
 
-## File Structure
+## 1. INTRODUCTION
 
-```
-soundmirrorgame/
-├── index.html          ← The game (single file)
-├── ahc.ico             ← Favicon
-├── logo.png            ← Top-left logo (always visible)
-├── soundmirror.glb     ← 3D model (when ready)
-├── fokker.mp3          ← Engine drone loop
-├── ambient.mp3         ← Coastal ambience loop
-├── gaviotas.mp3        ← Seagull calls
-├── viento.mp3          ← Wind loop
-├── lluvia.mp3          ← Rain loop
-├── tormenta.mp3        ← Storm loop
-└── truenos.mp3         ← Thunder claps (one-shot)
-```
+**Phantoms in the Sky** is a web-based heritage gamification project that brings the acoustic history of the Abbot's Cliff Sound Mirror to life through interactive gameplay. Built using JavaScript and HTML5 technologies with Three.js for 3D visualization and Web Audio API for spatial sound, this game recreates the experience of a sound mirror listener operator during the critical years of aerial defense development, from the experimental 1920s trials through multiple 20th-century conflicts to a speculative 2025 scenario.
+
+The project emerged from rigorous academic research conducted by The Acoustic Heritage Collective, who visited the Abbot's Cliff Sound Mirror in Kent, UK in October 2022 to conduct in-situ measurements, impulse response recordings, and acoustic heritage assessments. The game translates this scientific acoustic modeling into an accessible, educational, and emotionally engaging experience that safeguards not only the technical characteristics of the sound mirror but also the cultural memory and listening practices of a bygone era.
+
+Unlike traditional war games that focus on violence and destruction, Phantoms in the Sky centers on *listening* as an act of defense—a game where survival depends on acute auditory perception, patience, and precision. Players assume the role of a listener operator, using a rotating acoustic horn to detect incoming aircraft formations before they breach defensive lines. The game's auralization model is based on authentic acoustic simulations that account for distance attenuation, atmospheric absorption, mirror gain characteristics, and the frequency response of period-accurate listening devices including stethoscopes and trumpet cones.
+
+This project represents a novel approach to acoustic heritage safeguarding, moving beyond conventional impulse response documentation to create a fully interactive, historically-grounded virtual environment. By combining academic rigor with game design, Phantoms in the Sky offers an alternative method of historical media reception—one that engages players viscerally with the acoustic realities of pre-radar air defense while honoring the fears, anxieties, and listening practices of those who operated these monumental concrete structures.
 
 ---
 
-## 1. REPLACING AUDIO FILES
+## 2. HISTORICAL BACKGROUND
 
-### What to prepare
+### The Abbot's Cliff Sound Mirror
 
-| File | Duration | Loop? | Character |
-|------|----------|-------|-----------|
-| `fokker.mp3` | 5-8s | YES | Steady engine drone. Fundamental ~50-80Hz. NO transients. Crossfade loop points 500ms. |
-| `ambient.mp3` | 15-20s | YES | Gentle coastal waves + light wind. Pink noise character. |
-| `gaviotas.mp3` | 10-15s | NO | 3-4 seagull calls, irregular spacing. Triggered randomly in code. |
-| `viento.mp3` | 10-15s | YES | Sustained wind, no harsh gusts. |
-| `lluvia.mp3` | 10-15s | YES | Constant rain, pink noise texture. |
-| `tormenta.mp3` | 15-20s | YES | Heavy rain + wind combined. NO thunder (separate file). |
-| `truenos.mp3` | 8-12s | NO | 2-3 thunder claps with gaps. Triggered randomly every 8-20s. |
+The Abbot's Cliff Sound Mirror is a concrete acoustic reflector with a spherical dish 6.096 meters (20 feet) in diameter and a radius of curvature of 4.572 meters (15 feet), located on the Kent coast of the United Kingdom at coordinates 51.101696, 1.243615. Built in 1928 as part of Dr. William Sansome Tucker's "Sound Mirror Programme," this structure was one of several experimental early warning systems designed to detect approaching aircraft before the invention of radar.
 
-### How to integrate
+The mirror was constructed following successful trials at Hythe and formed part of "the Hythe system," a network of acoustic mirrors with different designs that represented ongoing experimentation to discover which shapes and sizes worked best for aerial threat detection. The whole structure was inclined 5 degrees horizontally and extends on a NW-SE orientation (axis 165 true bearing) along the edge of the cliff.
 
-**All audio files should be 128kbps MP3, mono or stereo.**
+### Original Operational Use
 
-Open `index.html` and search for the comment:
-```
-// Coastal ambient: pink noise through lowpass
-```
+Sound mirrors functioned by concentrating and amplifying sound waves from distant aircraft engines. Their spherical concave surfaces converted flat waves into spherical ones at a specific focal point, creating concentric patterns that could bring distant sounds seemingly close to the listener. The experimental mirrors had a maximum detection range of 22 miles (approximately 35 kilometers), though this was significantly reduced on windy days.
 
-That's inside `_initAmbient()` in the `AudioEngine` class. Replace the oscillator/noise-based synthesis with MP3 loading.
+At the focal point of the mirror, a listening system was positioned. Initially, this consisted of a trumpet (46-61 cm wide angle end) attached to a stethoscope. Later systems incorporated electric microphones. By rotating the listening device, the operator in the control room below the mirror could determine the direction of incoming aircraft and relay this information to anti-aircraft batteries via communication systems. The mirrors were capable of determining the incoming direction of an aircraft to within 2 degrees or less, providing the British forces with approximately 15 minutes of warning before an attack.
 
-#### Step-by-step for each audio:
+A 1924 report suggested that sound mirrors were ten times more sensitive than the human ear, and they were tested by blind listeners in 1925 to maximize auditory acuity. Test results indicated that operators should switch every 40 minutes to avoid irritation caused by the noise of small weather changes or the movement of ships in the English Channel.
 
-**A) Engine drone (fokker.mp3) — in `addFormation()` method:**
+### Strategic Context and Obsolescence
 
-Find:
-```javascript
-const o1=this.ctx.createOscillator(); o1.type='sawtooth';
-o1.frequency.value=55+Math.random()*5;
-const o2=this.ctx.createOscillator(); o2.type='square';
-o2.frequency.value=27+Math.random()*3;
-const mix=this.ctx.createGain(); mix.gain.value=0.4;
-```
+The construction location of Abbot's Cliff followed recommendations from the Royal Aircraft Factory: "The position chosen for a reflector should be the flat top of a low hill since such a position is fairly free from local sounds. An absence of trees is also an advantage since the rustling of the leaves interferes with the hearing. If mounted near the coast, say on cliffs, the reflector should be kept back say two or three hundred yards from the edge of the cliffs so as to eliminate the noise of the waves."
 
-Replace the oscillators with a BufferSource. First, load the buffer once at init:
+Once constructed, the mirrors were tested using aircraft, ships, and concrete pipes that projected low-frequency drones at frequencies below 50 Hz to simulate aircraft noise. However, with the development of faster aircraft in the 1930s and the advent of radar technology, sound mirrors became obsolete before they were ever used in actual combat. They were never deployed in a real attack scenario.
 
-```javascript
-// Add this at the end of init(), after this.ok = true:
-this._loadBuffer('fokker.mp3').then(buf => { this.fokkerBuf = buf; });
+### Cultural and Monumental Heritage
 
-// Add this method to AudioEngine:
-async _loadBuffer(url) {
-  const resp = await fetch(url);
-  const ab = await resp.arrayBuffer();
-  return this.ctx.decodeAudioData(ab);
-}
-```
+The Abbot's Cliff Sound Mirror is registered with Historic England as Monument Number 1413672. Beyond its technical and historical significance, the mirror holds profound cultural meaning. As R. Murray Schafer noted in his discussion of "Acoustic Space," sound mirrors remind us of an acoustic world where survival was reliant on listening skills—a monument to an era when hearing was a primary tool of defense and perception.
 
-Then in `addFormation()`, replace the oscillators:
-```javascript
-addFormation(id) {
-  if (!this.ctx || !this.fokkerBuf) return;
-  const src = this.ctx.createBufferSource();
-  src.buffer = this.fokkerBuf;
-  src.loop = true;
-  // Slight random detune so overlapping formations sound different
-  src.playbackRate.value = 0.95 + Math.random() * 0.1;
-  
-  const dg = this.ctx.createGain(); dg.gain.value = 0;
-  const dlp = this.ctx.createBiquadFilter(); dlp.type = 'lowpass';
-  dlp.frequency.value = 8000; dlp.Q.value = 0.5;
-  const mg = this.ctx.createGain(); mg.gain.value = 0;
-  
-  src.connect(dg).connect(dlp).connect(mg).connect(this.fBus);
-  src.start();
-  
-  this.nodes.set(id, {src, dg, dlp, mg});
-}
-```
+Paul Virilio argued in "War and Cinema" that weapons are tools of perception as well as destruction. The sound mirrors can be interpreted as monuments to the fear of the future, to the unknown, to the need for anticipation. They represent what Selina Bonelli called "a summed concretion of historic and present fears"—concrete ears crafted from industrial materials, listening for threats across the English Channel.
 
-And update `removeFormation()`:
-```javascript
-removeFormation(id) {
-  const n = this.nodes.get(id);
-  if (!n) return;
-  const t = this.ctx.currentTime;
-  n.dg.gain.setTargetAtTime(0, t, 0.1);
-  setTimeout(() => {
-    try { n.src.stop(); n.src.disconnect();
-      n.dg.disconnect(); n.dlp.disconnect(); n.mg.disconnect();
-    } catch(e) {}
-    this.nodes.delete(id);
-  }, 300);
-}
-```
-
-**B) Ambient (ambient.mp3) — in `_initAmbient()`:**
-
-Find:
-```javascript
-const nb = this._pinkBuf(3);
-this.ambSrc = this.ctx.createBufferSource();
-this.ambSrc.buffer = nb; this.ambSrc.loop = true;
-```
-
-Replace with:
-```javascript
-this._loadBuffer('ambient.mp3').then(buf => {
-  this.ambSrc = this.ctx.createBufferSource();
-  this.ambSrc.buffer = buf;
-  this.ambSrc.loop = true;
-  const lp = this.ctx.createBiquadFilter();
-  lp.type = 'lowpass'; lp.frequency.value = 800; lp.Q.value = 0.5;
-  this.ambSrc.connect(lp).connect(this.ambGain).connect(this.master);
-  this.ambSrc.start();
-});
-```
-
-**C) Weather layers (viento, lluvia, tormenta) — in `_initAmbient()`:**
-
-Find the weather noise section:
-```javascript
-const wn = this.ctx.createBufferSource();
-wn.buffer = this._pinkBuf(4); wn.loop = true;
-```
-
-Replace with a more sophisticated system. In `setWeather()`, load the appropriate MP3 based on the weather string:
-
-```javascript
-setWeather(boostDB, weather) {
-  if (!this.ctx) return;
-  const t = this.ctx.currentTime;
-  const wv = boostDB > 0 ? dbGain(boostDB - 60) : 0;
-  this.wxGain.gain.setTargetAtTime(wv, t, 2);
-  
-  // Load appropriate weather layer
-  let wxFile = null;
-  if (weather.includes('thunder') || weather.includes('storm')) wxFile = 'tormenta.mp3';
-  else if (weather.includes('rain')) wxFile = 'lluvia.mp3';
-  else if (weather.includes('wind')) wxFile = 'viento.mp3';
-  
-  if (wxFile && wxFile !== this._currentWxFile) {
-    this._currentWxFile = wxFile;
-    this._loadBuffer(wxFile).then(buf => {
-      if (this._wxSrc) { try { this._wxSrc.stop(); } catch(e) {} }
-      this._wxSrc = this.ctx.createBufferSource();
-      this._wxSrc.buffer = buf;
-      this._wxSrc.loop = true;
-      this._wxSrc.connect(this.wxGain);
-      this._wxSrc.start();
-    });
-  }
-  
-  // Seagulls
-  if (weather.includes('seagull')) this._startSG();
-  else { this.sgGain.gain.setTargetAtTime(0, t, 0.5); this._stopSG(); }
-}
-```
-
-**D) Seagulls (gaviotas.mp3) — in `_startSG()`:**
-
-Replace the oscillator-based seagull with the MP3:
-```javascript
-_startSG() {
-  if (this._sgInt) return;
-  this._loadBuffer('gaviotas.mp3').then(buf => {
-    this._sgBuf = buf;
-    const fire = () => {
-      if (!this.ctx || !this._sgBuf) return;
-      const src = this.ctx.createBufferSource();
-      src.buffer = this._sgBuf;
-      // Random pitch shift
-      src.playbackRate.value = 0.8 + Math.random() * 0.4;
-      const g = this.ctx.createGain();
-      g.gain.value = 0.03;
-      src.connect(g).connect(this.master);
-      src.start();
-      this._sgInt = setTimeout(fire, 3000 + Math.random() * 8000);
-    };
-    fire();
-  });
-}
-```
-
-**E) Thunder (truenos.mp3) — in `thunder()`:**
-
-Replace the noise burst:
-```javascript
-thunder() {
-  if (!this.ctx) return;
-  if (!this._thunderBuf) {
-    this._loadBuffer('truenos.mp3').then(buf => {
-      this._thunderBuf = buf;
-      this._playThunder();
-    });
-  } else {
-    this._playThunder();
-  }
-}
-
-_playThunder() {
-  const src = this.ctx.createBufferSource();
-  src.buffer = this._thunderBuf;
-  const g = this.ctx.createGain();
-  g.gain.value = 0.3;
-  src.connect(g).connect(this.master);
-  src.start();
-}
-```
+These structures have inspired numerous artistic works, including paintings by Eric Ravilious (1941), sound installations, experimental music compositions, video art, architectural studies, and design objects. They have become pieces of art in themselves—imposing yet graceful, simultaneously evoking silence, solitude, deep listening, and the anxieties of technological warfare.
 
 ---
 
-## 2. REPLACING THE 3D MODEL (soundmirror.glb)
+## 3. GAME INSTRUCTIONS
 
-### What to prepare
+### Objective
 
-- Export your 3D model as `.glb` (binary glTF)
-- The model should face **+Z** direction (towards the sea/enemy)
-- Scale: real-world meters (the mirror block is ~7m wide, ~8m tall)
-- Origin: at ground level, centered on the mirror
+Your mission as the listener operator at Abbot's Cliff Sound Mirror is to detect incoming enemy aircraft formations before they breach defensive lines. You must use your acoustic horn to sweep the sky, find peak engine sound intensity, and confirm detections with precise timing.
 
-### How to integrate
+### Controls
 
-**A) Add GLTFLoader** — add this script tag after the Three.js import:
+- **ARROW KEYS (← →)** or **MOUSE MOVEMENT**: Rotate the acoustic horn and camera view 360 degrees horizontally
+- **ARROW KEYS (↑ ↓)**: Adjust vertical viewing angle (pitch control)
+- **SPACE**: Confirm detection when you hear maximum signal
+- **ESC**: Pause the game
+- **Q**: Quit mission (returns to instructions after confirmation)
+- **SHIFT + ARROW KEYS**: Fine adjustment mode (0.05° instead of 0.2° per step)
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-```
+### Core Mechanics
 
-**B) Replace `_buildMirror()`** with:
+#### **Acoustic Detection**
 
-```javascript
-_buildMirror(T) {
-  const loader = new T.GLTFLoader();
-  loader.load('soundmirror.glb', (gltf) => {
-    const model = gltf.scene;
-    // Apply 5° forward tilt (historical)
-    model.rotation.x = -5 * (Math.PI / 180);
-    // Position at origin
-    model.position.set(0, 0, 0);
-    // Optional: scale if needed
-    // model.scale.set(1, 1, 1);
-    this.sc.add(model);
-  }, undefined, (err) => {
-    console.error('Failed to load 3D model:', err);
-    // Fallback: use the placeholder geometry
-    this._buildMirrorFallback(T);
-  });
-}
-```
+Aircraft formations approaching across the English Channel generate engine noise that travels through the atmosphere to your position. The sound mirror concentrates these distant sounds at its focal point, where your acoustic horn is positioned. By rotating the horn left and right, you can sweep across different angles to find the direction where engine noise is loudest.
 
-Rename the current `_buildMirror` to `_buildMirrorFallback` so it's used as fallback.
+When the horn is aligned with an incoming formation, you will hear the engine sound increase in volume and intensity. The game's audio system simulates:
 
-### Model tips
+- **Distance attenuation**: Aircraft far away sound quieter; closer aircraft are louder
+- **Atmospheric absorption**: High frequencies are filtered more at greater distances
+- **Mirror gain**: The concrete dish provides approximately +18 dB amplification at perfect alignment, decreasing as angle misalignment increases
+- **Listening device frequency response**: The trumpet and stethoscope system emphasizes low frequencies (30-120 Hz) where aircraft engines produce most sound
 
-- If the model appears too dark, check that materials export correctly in glTF
-- If the model is rotated wrong, adjust `model.rotation.y` (try `Math.PI` to flip 180°)
-- The dish concavity should face **-Z** (towards the operator/camera)
-- Test with: `model.traverse(c => { if(c.isMesh) c.material = new THREE.MeshStandardMaterial({color:0xff0000}); });` to debug visibility
+#### **Detection Tolerance**
+
+Each wave has a different **tolerance** value that determines how precisely you must align the horn with the formation's true direction. Early waves (1920s trials) allow wider margins of error (±1.2 degrees), while later waves demand increasingly precise alignment as operator training improved and faster aircraft required quicker responses.
+
+Press **SPACE** when you believe the horn is optimally aligned. If you are within the tolerance range, you successfully detect the formation. If not, you miss, and the attempt goes into cooldown.
+
+#### **Cooldown System**
+
+After each detection attempt (successful or failed), there is a **1.5-second cooldown** before you can attempt again. This simulates the time required for the operator to process the signal, make a decision, and prepare for the next attempt. A visual cooldown bar at the bottom of the screen shows your readiness status.
+
+#### **Lives and Breaches**
+
+You have **3 lives per wave**. You lose a life if:
+
+- You **miss a detection** (press SPACE when not aligned within tolerance)
+- A formation **breaches** defensive lines by getting too close (within 1.5 km), escaping at extreme angles (beyond ±30°), or reaching the mirror position
+
+When you lose all 3 lives, the wave ends, and you proceed to the next historical period (or to game over if you've completed all waves).
+
+#### **Scoring**
+
+Points are awarded based on:
+
+- **Detection distance**: Detecting formations at greater distances earns more points (maximum 1000 points for detections at 40 km)
+- **Streak bonus**: Consecutive successful detections increase your multiplier
+- **Wave completion**: Completing all required detections in a wave grants bonus points
+
+### The Seven Waves: Historical Periods and Challenges
+
+#### **Wave 1: 1920s TRIALS (1928)**
+
+- **Historical Context**: Experimental phase with slow biplanes (30 m/s / ~67 mph)
+- **Weather**: Clear skies, optimal listening conditions
+- **Spawn Rate**: 8 seconds between formations (leisurely pace)
+- **Maximum Simultaneous**: 2 formations
+- **Tolerance**: ±1.2° (generous)
+- **Weather Boost**: 0 dB (no additional ambient noise)
+- **Aircraft Sound**: Early 1920s engines (engine_1920s.mp3)
+- **Detections Required**: 3 successful detections to advance
+- **Challenge**: Learning the basic mechanics; getting accustomed to the acoustic cues
+
+#### **Wave 2: 1939-45 BLITZ (WWII)**
+
+- **Historical Context**: German bomber attacks during the Battle of Britain
+- **Weather**: Storm conditions with heavy rain and wind
+- **Aircraft Speed**: 110 m/s (~246 mph)
+- **Spawn Rate**: 6 seconds
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±1.0° (more precise)
+- **Weather Boost**: +5 dB (storm noise degrades signal-to-noise ratio)
+- **Aircraft Sound**: WWII-era engines (engine_1940s.mp3)
+- **Detections Required**: 3
+- **Challenge**: Storm weather creates acoustic interference; faster aircraft approach more quickly
+
+#### **Wave 3: 1950s KOREA**
+
+- **Historical Context**: Early jet age; Korean War period tactical aircraft
+- **Weather**: Overcast with moderate ambient noise
+- **Aircraft Speed**: 280 m/s (~626 mph)
+- **Spawn Rate**: 5 seconds
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±0.8°
+- **Weather Boost**: +8 dB
+- **Aircraft Sound**: 1950s turboprop/early jet engines (engine_1950s.mp3)
+- **Detections Required**: 4
+- **Challenge**: Significantly faster targets; narrower detection window
+
+#### **Wave 4: 1979-89 AFGHAN (Soviet-Afghan War era)**
+
+- **Historical Context**: Cold War tactical aircraft; high-altitude fast movers
+- **Weather**: Haze with reduced visibility
+- **Aircraft Speed**: 260 m/s (~582 mph)
+- **Spawn Rate**: 4 seconds
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±0.7°
+- **Weather Boost**: +10 dB
+- **Aircraft Sound**: 1980s military jet engines (engine_1980s.mp3)
+- **Detections Required**: 4
+- **Challenge**: Rapid spawn rate; increased atmospheric noise
+
+#### **Wave 5: 1982 FALKLANDS**
+
+- **Historical Context**: Falklands War; subsonic and supersonic threats
+- **Weather**: Fog (dense)
+- **Aircraft Speed**: 300 m/s (~671 mph)
+- **Spawn Rate**: 3 seconds
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±0.6°
+- **Weather Boost**: +12 dB
+- **Aircraft Sound**: Falklands-era jet engines (engine_1982.mp3)
+- **Detections Required**: 5
+- **Challenge**: Dense fog creates severe acoustic masking; very tight tolerance; high spawn rate
+
+#### **Wave 6: 1991 DESERT STORM**
+
+- **Historical Context**: Gulf War; modern multi-role fighters
+- **Weather**: Clear skies (ironically no weather advantage despite clear conditions)
+- **Aircraft Speed**: 650 m/s (~1,454 mph / supersonic)
+- **Spawn Rate**: 2 seconds
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±0.5°
+- **Weather Boost**: +15 dB
+- **Aircraft Sound**: Modern turbofan engines (engine_1991.mp3)
+- **Detections Required**: 5
+- **Challenge**: Extremely fast supersonic targets; very narrow tolerance; minimal time to react
+
+#### **Wave 7: 2025 EASTERN FRONT (Speculative Future)**
+
+- **Historical Context**: Near-future conflict scenario with advanced stealth and hypersonic threats
+- **Weather**: Severe storm
+- **Aircraft Speed**: 850 m/s (~1,901 mph / hypersonic)
+- **Spawn Rate**: 1.5 seconds (relentless)
+- **Maximum Simultaneous**: 3 formations
+- **Tolerance**: ±0.4° (elite precision required)
+- **Weather Boost**: +20 dB
+- **Aircraft Sound**: Advanced future engines (engine_2025.mp3)
+- **Detections Required**: 6
+- **Challenge**: The ultimate test—hypersonic speeds, extreme weather, minimal tolerance, and rapid-fire spawns
+
+#### **Wave 8+: ENDLESS WAR**
+
+After completing Wave 7, you enter an endless mode where waves continue indefinitely with progressively increasing difficulty:
+
+- Speed increases by 50 m/s per wave
+- Weather boost increases by +1 dB per wave
+- Tolerance decreases by 0.03° per wave (minimum 0.15°)
+- Spawn interval decreases by 0.1 seconds per wave (minimum 1.0 second)
+- Detections required: 6 per wave
+
+### Environmental Systems
+
+#### **Weather and Atmospheric Conditions**
+
+Each wave features different weather conditions that affect acoustic detection:
+
+- **Clear**: Minimal interference; optimal signal propagation
+- **Overcast**: Moderate ambient noise from wind and atmospheric turbulence
+- **Haze**: Light scattering of sound; slight degradation
+- **Fog**: Dense acoustic masking; significant signal loss
+- **Storm**: Severe interference from rain, wind, and thunder; dramatic reduction in effective range
+
+Weather is represented both visually (changing skybox colors and fog densities) and acoustically (ambient weather sounds via the Web Audio API's weather gain node). Thunder may occur randomly during storm conditions.
+
+#### **Dynamic Backgrounds**
+
+As you progress through waves, the equirectangular background panorama changes to reflect different historical periods and locations, synchronized with the frontmirror texture that overlays the 3D mirror model.
+
+### HUD (Heads-Up Display)
+
+The game interface provides essential information:
+
+- **Wave Label** (top-left): Current wave number and name
+- **Formation Status** (top-left): Number of active (undetected) formations approaching
+- **Score** (top-right): Current point total
+- **Lives** (top-center): Remaining lives shown as diamonds (♦)
+- **Horn Angle Readout** (bottom-center): Current horn alignment in degrees; warns when outside effective mirror range (±30°)
+- **Cooldown Bar** (bottom-center): Visual indicator of detection readiness
+- **Radar Display** (bottom-right): Top-down tactical view showing:
+  - Your position (center)
+  - Active formations (red blips with distance/angle data)
+  - Detected formations (dimmed blue markers)
+  - Mirror field of view
+
+### Strategy Tips
+
+1. **Sweep Methodically**: Move the horn slowly across the horizon; rushing leads to missed peaks
+2. **Listen for Maxima**: Engine sound will rise and fall as you rotate; detect at the loudest point
+3. **Use Fine Control**: Hold SHIFT for 0.05° micro-adjustments when close to alignment
+4. **Watch the Radar**: Use the tactical display to anticipate formation positions and angles
+5. **Manage Cooldown**: Don't spam SPACE; wait for confidence before attempting detection
+6. **Prioritize Threats**: In multi-formation scenarios, detect the closest/fastest threats first
+7. **Adapt to Weather**: Storms and fog reduce effective detection range; rely more on radar cues
+8. **Learn Aircraft Sounds**: Each era has distinct engine characteristics; familiarity improves detection speed
 
 ---
 
-## 3. AUDIO SPECIFICATIONS SUMMARY
+## 4. CREDITS
 
-### Signal chain (stays the same with MP3s)
+### Research and Field Measurements
 
-```
-[fokker.mp3 per formation, looped]
-  → distanceGain (inverse square law)
-  → distanceLowpass (atmospheric absorption)
-  → mirrorGain (angle-dependent, ±16° table)
-  → formationBus
-  → stethoscope lowpass 1kHz
-  → bass peaking 70Hz +12dB Q=1.2
-  → horn notch 50Hz +6dB Q=3
-  → master gain
+**In-Situ Measurements at Abbot's Cliff Sound Mirror (October 2022)**
+- Ginebra Raventós
+- Ɇ₥łⱠłØ ₥₳ⱤӾ
+- Edgardo Gómez
 
-[ambient.mp3 looped] → lowpass 800Hz → ambientGain → master
-[weather MP3 looped] → lowpass 2kHz → weatherGain → master
-[gaviotas.mp3 one-shot random] → gain → master
-[truenos.mp3 one-shot random] → gain → master
-```
+### Academic Research
 
-### Critical: fokker.mp3 loop quality
+**Original Research by The Acoustic Heritage Collective**
+- Marx E.
+- Raventós G.
+- Gómez E.
+- Lavandeira J.
 
-This is the most important file. The player needs to hear it smoothly at varying distances/angles. Tips:
+Publication: *Acoustic Heritage Safeguarding of the Abbot's Cliff Sound Mirror and a proposed Auralization Model for Heritage Gamification*
 
-1. Record or synthesize a stable 5-8 second engine drone
-2. Edit in Audacity: find a stable segment with consistent RPM
-3. Apply crossfade at loop points (Edit → Preferences → Import/Export → crossfade)
-4. Test the loop by playing it on repeat — any clicks or thumps will be obvious in-game
-5. Export as mono MP3, 128kbps
-6. Fundamental frequency should be in the 50-80Hz range (this is where the mirror gain peaks)
+### Technical Development
+
+**Acoustic Modeling and Simulation**
+- Computational modeling reconstructed using i-SIMPA free software (CSTB)
+- Spherical mirror gain calculations based on in-situ measurements and theoretical acoustic principles
+- Atmospheric attenuation coefficients derived from Crocker (1998) reference data
+
+**Auralization Model Design**
+- Ɇ₥łⱠłØ ₥₳ⱤӾ
+
+**Game Design and Programming**
+- Ɇ₥łⱠłØ ₥₳ⱤӾ
+- JavaScript/HTML5 implementation
+- Three.js 3D graphics engine
+- Web Audio API spatial audio system
+- Custom distance attenuation and mirror gain algorithms
+
+**3D Modeling**
+- Joan Lavandeira
+- Mirror geometry based on historical dimensions (6.096m diameter, 4.572m radius of curvature)
+- Environmental assets and scene composition
+
+### Audio Assets
+
+**Aircraft Engine Recordings**
+- Period-specific engine sound samples (engine_1920s.mp3 through engine_2025.mp3)
+- Reference recording: Fokker Dr.1 triplane with 9-cylinder Le Rhône 110 horsepower 9J rotary engine (Pole Position Production, 2023)
+
+**Environmental Soundscapes**
+- Field recordings: Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez (Abbot's Cliff, 2022)
+- Weather audio: ambient.mp3, viento.mp3 (wind), lluvia.mp3 (rain), tormenta.mp3 (storm), truenos.mp3 (thunder)
+- Seagull ambience: gaviotas.mp3
+
+### Historical Sources and References
+
+- Scarth, R.N. (1999). *Echoes from the Sky: A Story of Acoustic Defence*. Hythe Civic Society
+- Goodman, S. (2012). *Sonic Warfare: Sound, Affect, and the Ecology of Fear*. MIT Press
+- Schafer, R.M. (2007). "Acoustic Space 1." *Circuit* 17(3): 83-86
+- Virilio, P. (1989). *War and Cinema: The Logistics of Perception*. Verso
+- Historic England Monument Number 1413672
+- Wessex Archaeology archival materials
+- Imperial War Museum collections
+
+### Special Thanks
+
+- **The Acoustic Heritage Collective** for pioneering research in acoustic heritage safeguarding
+- **i-SIMPA development team** (CSTB) for providing free acoustic simulation software
+- **Historic England** for heritage site preservation
+- **The local community of Kent** for maintaining and protecting the Abbot's Cliff Sound Mirror
+- **All artists and researchers** who have contributed to the cultural understanding of sound mirrors through their creative works
+
+### Technology Stack
+
+- **Three.js** (r128): 3D rendering engine
+- **Web Audio API**: Spatial audio processing and synthesis
+- **JavaScript ES6+**: Core game logic
+- **HTML5/CSS3**: Interface and styling
+- **RAF851 Font Family**: Period-appropriate typography
+
+### Project Information
+
+**Title**: Phantoms in the Sky — Acoustic Heritage Collective  
+**Website**: [acousticheritagecollective.org](https://acousticheritagecollective.org)  
+**Year**: 2026  
+**Location**: Barcelona, Spain / Berlin, Germany
 
 ---
 
-## 4. FILE PLACEMENT
+## Closing Statement
 
-Upload all files to the same directory:
-```
-https://acousticheritagecollective.org/soundmirrorgame/index.html
-https://acousticheritagecollective.org/soundmirrorgame/ahc.ico
-https://acousticheritagecollective.org/soundmirrorgame/logo.png
-https://acousticheritagecollective.org/soundmirrorgame/fokker.mp3
-https://acousticheritagecollective.org/soundmirrorgame/ambient.mp3
-https://acousticheritagecollective.org/soundmirrorgame/gaviotas.mp3
-https://acousticheritagecollective.org/soundmirrorgame/viento.mp3
-https://acousticheritagecollective.org/soundmirrorgame/lluvia.mp3
-https://acousticheritagecollective.org/soundmirrorgame/tormenta.mp3
-https://acousticheritagecollective.org/soundmirrorgame/truenos.mp3
-https://acousticheritagecollective.org/soundmirrorgame/soundmirror.glb
-```
-
-No subdirectories needed. Everything lives flat in the same folder.
+Phantoms in the Sky is dedicated to the memory of the operators who stood vigil at acoustic mirrors across the British coast, listening for threats in the darkness. Through this game, we honor their patience, skill, and the profound human capacity to defend through *listening*—a game of war without violence, where survival depends not on destruction, but on acute perception and the courage to hear what approaches from beyond the horizon.
 
 ---
 
-## 5. TESTING CHECKLIST
-
-After replacing each audio file:
-
-- [ ] Game loads without console errors
-- [ ] fokker.mp3: smooth loop, no clicks, audible volume change when sweeping horn
-- [ ] ambient.mp3: smooth background, not too loud
-- [ ] gaviotas.mp3: plays randomly, not jarring
-- [ ] viento.mp3: activates on wind waves, smooth loop
-- [ ] lluvia.mp3: activates on rain waves
-- [ ] tormenta.mp3: activates on storm waves
-- [ ] truenos.mp3: random thunder claps during storm waves
-- [ ] Pause (ESC): complete silence
-- [ ] Game over: all audio stops cleanly
-
-After replacing the 3D model:
-
-- [ ] Model is visible and correctly oriented
-- [ ] Dish faces the operator (concave side towards -Z)
-- [ ] Scale looks right relative to ground plane
-- [ ] Model doesn't clip through the ground
-- [ ] 5° tilt is visible
-
----
-
-*Questions? The code is extensively commented. Search for `AudioEngine` and `_buildMirror` to find all relevant sections.*
+*"Sound is our first sense. Before we enter the world, we can hear sounds from outside the womb. After birth, human infants can recognize the sounds they heard before embarking on their journey to the outside world. On a fundamental level, sound can help us to recognize things we don't yet know that we know."*  
+— Williams & Coblentz (2017)

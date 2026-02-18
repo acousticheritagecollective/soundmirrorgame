@@ -3,28 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOUND MIRROR — Acoustic Heritage Collective</title>
-<meta name="description" content="Sound Mirror: an acoustic heritage gamification experience. Detect enemy aircraft formations using the Abbott's Cliff Sound Mirror.">
+<title>PHANTOMS IN THE SKY — Acoustic Heritage Collective</title>
+<meta name="description" content="Phantoms in the Sky: an acoustic heritage game. Detect enemy aircraft formations using the Abbott's Cliff Sound Mirror. A game of war without violence.">
 <link rel="icon" type="image/x-icon" href="ahc.ico">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
+@font-face {
+  font-family: 'RAF851';
+  src: url('RAF%20851ATH%20Normal.otf') format('opentype');
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'RAF851';
+  src: url('RAF%20851ATH%20Bold.otf') format('opentype');
+  font-weight: bold;
+}
+
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --bg: #070b07;
-  --panel: rgba(10,16,10,0.92);
-  --border: #2a3f2a;
-  --border-hi: #3a5f3a;
-  --text: #b0c4a8;
-  --text-dim: #5a7055;
-  --text-bright: #d4e8cc;
-  --accent: #6aaa5a;
-  --danger: #aa4040;
-  --warn: #cc9944;
-  --gold: #d4c46a;
-  --font-display: 'Special Elite', cursive;
-  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --bg: #6ba4b8;
+  --panel: rgba(90,140,160,0.92);
+  --border: #4a8a9e;
+  --border-hi: #3a7a8e;
+  --text: #e8e0d0;
+  --text-dim: #c0d8e0;
+  --text-bright: #f5f0e5;
+  --accent: #c8102e;
+  --accent2: #f5a623;
+  --navy: #012169;
+  --sky: #6ba4b8;
+  --cream: #e8e0d0;
+  --danger: #c8102e;
+  --warn: #f5a623;
+  --gold: #f5a623;
+  --font-display: 'RAF851', 'Special Elite', sans-serif;
+  --font-mono: 'RAF851', 'IBM Plex Mono', 'Courier New', monospace;
 }
 
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); }
@@ -39,30 +52,33 @@ body { font-family:var(--font-mono); font-size:12px; }
 /* ── OVERLAY SYSTEM ─────────────────────── */
 .overlay {
   position:fixed; top:0; left:0; right:0; bottom:0;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  display:flex; flex-direction:column; align-items:center;
   z-index:10; pointer-events:none;
   opacity:0; transition:opacity 0.6s ease;
+  overflow-y:auto; padding:30px 0;
 }
 .overlay.active { opacity:1; pointer-events:auto; }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  padding: 32px 44px;
-  max-width: 600px; width: 90%;
+  padding: 28px 36px;
+  max-width: 780px; width: 92%;
   text-align: center;
-  box-shadow: 0 0 60px rgba(0,0,0,0.5), 0 0 20px rgba(40,80,40,0.05) inset;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.05) inset;
   position: relative;
+  flex-shrink: 0;
+  margin: auto;
 }
 .panel::before {
-  content:''; position:absolute; top:-1px; left:20%; right:20%; height:1px;
+  content:''; position:absolute; top:-1px; left:20%; right:20%; height:2px;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
 }
 
 .panel-title {
   font-family: var(--font-display);
-  font-size: 28px; letter-spacing: 8px; color: var(--text-bright);
-  text-shadow: 0 0 30px rgba(100,170,100,0.15);
+  font-size: 28px; letter-spacing: 8px; color: var(--cream);
+  font-weight: bold;
   margin: 8px 0 4px;
 }
 .panel-sub {
@@ -75,7 +91,7 @@ body { font-family:var(--font-mono); font-size:12px; }
 }
 
 .blink { animation: blink 1.8s ease-in-out infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.7} }
 
 .prompt {
   font-size: 12px; color: var(--accent); letter-spacing: 4px;
@@ -87,32 +103,32 @@ body { font-family:var(--font-mono); font-size:12px; }
   text-align:left; font-size:11px; line-height:1.9; margin:12px 0;
   max-height: 160px; overflow:hidden;
 }
-#loading-log .done { color: var(--accent); }
+#loading-log .done { color: var(--cream); }
 #loading-log .pending { color: var(--text-dim); }
 
 .progress-bar {
-  width:100%; height:2px; background:#111; position:relative; margin-top:16px;
+  width:100%; height:2px; background:rgba(0,0,0,0.15); position:relative; margin-top:16px;
   overflow:hidden;
 }
 .progress-bar .fill {
   position:absolute; top:0; left:0; height:100%;
-  background: linear-gradient(90deg, #2a5a2a, var(--accent));
+  background: linear-gradient(90deg, var(--navy), var(--accent));
   transition: width 0.4s ease;
 }
 
 /* ── INSTRUCTIONS ────────────────────────── */
 .briefing-section {
-  text-align:left; line-height:1.85; font-size:11px; color:#94a88e;
+  text-align:left; line-height:1.85; font-size:11px; color:var(--cream);
   padding:10px 0;
 }
 .briefing-label {
-  color:var(--accent); font-weight:600; letter-spacing:2px;
+  color:var(--accent); font-weight:bold; letter-spacing:2px;
   margin-bottom:6px; font-size:11px;
 }
 .key-badge {
-  display:inline-block; background:#1a281a; border:1px solid var(--border);
-  padding:1px 8px; color:var(--text-bright); font-size:11px;
-  font-family:var(--font-mono); margin:0 2px;
+  display:inline-block; background:rgba(0,0,0,0.15); border:1px solid var(--border);
+  padding:1px 8px; color:var(--cream); font-size:11px;
+  font-family:var(--font-mono); margin:0 2px; font-weight:bold;
 }
 .controls-row {
   display:flex; gap:12px; align-items:center; margin:3px 0;
@@ -122,16 +138,16 @@ body { font-family:var(--font-mono); font-size:12px; }
 /* ── WAVE INTRO ──────────────────────────── */
 #wave-intro .panel {
   padding: 24px 40px;
-  background: rgba(10,16,10,0.88);
+  background: rgba(90,140,160,0.95);
 }
 .wave-number {
   font-family:var(--font-display);
-  font-size:38px; letter-spacing:6px; color:var(--text-bright);
-  text-shadow: 0 0 30px rgba(100,170,100,0.2);
+  font-size:38px; letter-spacing:6px; color:var(--cream);
+  font-weight:bold;
   margin:6px 0;
 }
 .wave-name {
-  font-size:14px; color:#7aaa6a; letter-spacing:5px;
+  font-size:14px; color:var(--accent); letter-spacing:5px; font-weight:bold;
 }
 .wave-prepare {
   font-size:9px; color:var(--text-dim); letter-spacing:3px; margin-top:12px;
@@ -147,24 +163,24 @@ body { font-family:var(--font-mono); font-size:12px; }
 .hud-top {
   display:flex; justify-content:space-between; align-items:flex-start;
   padding:14px 20px;
-  background:linear-gradient(180deg, rgba(7,11,7,0.85) 0%, transparent 100%);
+  background:linear-gradient(180deg, rgba(90,140,160,0.85) 0%, transparent 100%);
 }
-.hud-wave-label { font-size:10px; color:var(--text-dim); letter-spacing:3px; }
-.hud-formation-status { font-size:11px; margin-top:4px; }
-.hud-formation-status.alert { color:var(--warn); }
-.hud-formation-status.idle { color:#3a4a35; }
+.hud-wave-label { font-size:40px; color:#c8102e; letter-spacing:3px; font-weight:bold; }
+.hud-formation-status { font-size:40px; margin-top:4px; }
+.hud-formation-status.alert { color:#c8102e; font-weight:bold; }
+.hud-formation-status.idle { color:#c8102e; }
 
-.hud-score { font-size:20px; color:var(--text-bright); letter-spacing:2px; text-align:right; }
-.hud-score-label { font-size:9px; color:var(--text-dim); letter-spacing:3px; text-align:right; }
+.hud-score { font-size:40px; color:#c8102e; letter-spacing:2px; text-align:right; font-weight:bold; }
+.hud-score-label { font-size:9px; #c8102e; letter-spacing:3px; text-align:right; }
 
 .hud-center {
   position:absolute; top:12px; left:50%; transform:translateX(-50%);
   text-align:center;
 }
-.hud-lives { font-size:17px; letter-spacing:5px; }
-.hud-lives .on { color:var(--accent); text-shadow:0 0 8px rgba(100,170,100,0.5); }
-.hud-lives .off { color:#1a281a; }
-.hud-streak { font-size:9px; color:#7aaa6a; letter-spacing:2px; margin-top:3px; }
+.hud-lives { font-size:40px; letter-spacing:5px; }
+.hud-lives .on { color:var(--accent); text-shadow:0 0 8px rgba(200,16,46,0.4); }
+.hud-lives .off { color:rgba(0,0,0,0.2); }
+.hud-streak { font-size:9px; color:#c8102e; letter-spacing:2px; margin-top:3px; }
 
 /* HUD message */
 #hud-message {
@@ -177,113 +193,92 @@ body { font-family:var(--font-mono); font-size:12px; }
   font-family:var(--font-mono);
 }
 #hud-message.show { opacity:1; }
-#hud-message.detect { color:#7acc7a; border-color:#3a6a3a; text-shadow:0 0 10px rgba(100,200,100,0.3); }
-#hud-message.miss { color:var(--warn); border-color:#5a4a2a; }
-#hud-message.breach { color:#cc5555; border-color:#5a2a2a; text-shadow:0 0 10px rgba(200,80,80,0.3); }
+#hud-message.detect { color:var(--navy); border-color:var(--sky); }
+#hud-message.miss { color:var(--warn); border-color:#d0b880; }
+#hud-message.breach { color:var(--accent); border-color:var(--accent); }
 
 /* Horn indicator */
 #horn-indicator {
-  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
-  width:320px; text-align:center; z-index:5;
+  position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+  width:75%; text-align:center; z-index:5;
   pointer-events:none; opacity:0; transition:opacity 0.3s;
 }
 #horn-indicator.active { opacity:1; }
 
-.horn-bar {
-  position:relative; height:18px;
-  background:rgba(10,16,10,0.75); border:1px solid #1a2a1a;
-}
-.horn-bar .center-line {
-  position:absolute; left:50%; top:0; bottom:0; width:1px;
-  background: var(--border);
-}
-.horn-bar .needle {
-  position:absolute; top:2px; bottom:2px; width:5px;
-  background: var(--accent); border-radius:1px;
-  box-shadow:0 0 8px rgba(100,170,100,0.5);
-  transition:left 0.04s linear;
-  transform:translateX(-50%);
-}
-.horn-bar .effective-zone {
-  position:absolute; top:0; bottom:0;
-  background:rgba(80,160,80,0.1);
-  border-left:1px solid rgba(80,160,80,0.25);
-  border-right:1px solid rgba(80,160,80,0.25);
-  /* ±15° out of ±180° → zone is 15/180 = 8.33% on each side of center */
-  /* center is 50%, ±15° maps to 50% ± (15/180)*50% = 50% ± 4.17% → 45.83% to 54.17% */
-  left:45.83%; right:45.83%;
-}
-.horn-scale {
-  display:flex; justify-content:space-between;
-  padding:0 1px; margin-top:4px;
-}
-.horn-scale span { font-size:7px; color:#3a4a35; }
+
+
+
 .horn-angle-readout {
-  font-size:9px; color:var(--text-dim); letter-spacing:3px; margin-top:10px;
+  font-size: 40px;
+  font-weight: bold;
+  color: black;      /* color interno del texto */
+  letter-spacing: 2px;
+  margin-top: 10px;
+
 }
 
 /* ── GAME OVER ───────────────────────────── */
 .gameover-title {
   font-family:var(--font-display);
-  font-size:22px; letter-spacing:8px; color:#cc6655;
-  margin:8px 0 16px;
+  font-size:22px; letter-spacing:8px; color:var(--accent);
+  font-weight:bold; margin:8px 0 16px;
 }
 .stats-grid {
   display:grid; grid-template-columns:1fr 1fr; gap:14px;
   text-align:left; padding:16px 0; margin:8px 0;
-  border-top:1px solid #2a2020; border-bottom:1px solid #2a2020;
+  border-top:1px solid var(--border); border-bottom:1px solid var(--border);
 }
-.stat-label { font-size:9px; color:var(--text-dim); letter-spacing:2px; }
-.stat-value { font-size:18px; color:var(--text-bright); font-weight:600; }
-.stat-value.small { font-size:15px; color:#94a88e; font-weight:400; }
+.stat-label { font-size:9px; color:var(--warn); letter-spacing:2px; font-weight:bold; }
+.stat-value { font-size:18px; color:var(--cream); font-weight:bold; }
+.stat-value.small { font-size:15px; color:var(--text-dim); font-weight:400; }
 
 .callsign-row {
   display:flex; gap:8px; justify-content:center; margin-top:12px;
 }
 #callsign-input {
-  background:#0a140a; border:1px solid var(--border);
-  color:var(--text-bright); font-family:var(--font-mono);
+  background:rgba(0,0,0,0.15); border:1px solid var(--border);
+  color:var(--cream); font-family:var(--font-mono);
   font-size:14px; padding:8px 12px; width:170px;
   text-align:center; letter-spacing:3px; text-transform:uppercase;
-  outline:none;
+  outline:none; font-weight:bold;
 }
-#callsign-input:focus { border-color:var(--accent); }
-#callsign-input::placeholder { color:#2a3a2a; }
+#callsign-input:focus { border-color:var(--cream); }
+#callsign-input::placeholder { color:rgba(232,224,208,0.35); }
 
 #submit-btn {
-  background:#1a321a; border:1px solid var(--border);
-  color:#6a8a65; font-family:var(--font-mono);
+  background:var(--navy); border:1px solid var(--navy);
+  color:var(--cream); font-family:var(--font-mono);
   font-size:11px; padding:8px 16px; cursor:pointer;
-  letter-spacing:2px; transition:all 0.2s;
+  letter-spacing:2px; transition:all 0.2s; font-weight:bold;
 }
-#submit-btn:hover { background:#2a4a2a; color:var(--accent); border-color:var(--border-hi); }
+#submit-btn:hover { background:var(--accent); border-color:var(--accent); color:#fff; }
 
 /* ── LEADERBOARD ─────────────────────────── */
 .lb-title {
   font-family:var(--font-display);
-  font-size:20px; letter-spacing:8px; color:var(--text-bright);
-  margin:8px 0 16px;
+  font-size:20px; letter-spacing:8px; color:var(--cream);
+  font-weight:bold; margin:8px 0 16px;
 }
 .lb-list { border-top:1px solid var(--border); }
 .lb-row {
   display:grid; grid-template-columns:28px 1fr 80px 44px;
-  padding:7px 4px; border-bottom:1px solid #0f180f;
-  font-size:12px; align-items:center;
+  padding:7px 4px; border-bottom:1px solid var(--border);
+  font-size:12px; align-items:center; color:var(--cream);
 }
-.lb-row.rank1 { color:var(--gold); }
-.lb-row.rank2, .lb-row.rank3 { color:#a0c498; }
-.lb-rank { font-weight:600; }
+.lb-row.rank1 { color:var(--warn); font-weight:bold; }
+.lb-row.rank2, .lb-row.rank3 { color:var(--cream); }
+.lb-rank { font-weight:bold; }
 .lb-name { letter-spacing:2px; text-align:left; }
-.lb-score { text-align:right; font-weight:600; }
+.lb-score { text-align:right; font-weight:bold; }
 .lb-wave { text-align:right; font-size:9px; color:var(--text-dim); }
-.lb-empty { padding:20px; color:#3a4a35; font-size:11px; }
+.lb-empty { padding:20px; color:var(--text-dim); font-size:11px; }
 
 /* ── CREDITS BAR ─────────────────────────── */
 .credits {
-  font-size:8px; color:#2a3a2a; letter-spacing:2px;
-  margin-top:16px; padding-top:12px; border-top:1px solid #151f15;
+  font-size:8px; color:var(--text-dim); letter-spacing:2px;
+  margin-top:16px; padding-top:12px; border-top:1px solid var(--border);
 }
-.credits a { color:#3a5a3a; text-decoration:none; }
+.credits a { color:var(--sky); text-decoration:none; }
 
 /* ── DEBUG RADAR MAP ─────────────────────── */
 #radar-map {
@@ -294,19 +289,19 @@ body { font-family:var(--font-mono); font-size:12px; }
 #radar-map.active { opacity:1; }
 #radar-map canvas {
   width:100%; height:100%;
-  border:1px solid #1a2a1a;
+  border:1px solid var(--border);
   border-radius:50%;
-  background:rgba(5,10,5,0.85);
+  background:rgba(90,140,160,0.85);
 }
 #radar-label {
-  text-align:center; font-size:7px; color:#2a4a2a;
+  text-align:center; font-size:7px; color:var(--text-dim);
   letter-spacing:2px; margin-top:3px;
 }
 
 /* ── PAUSE OVERLAY ───────────────────────── */
 #pause-screen {
   position:fixed; top:0; left:0; right:0; bottom:0;
-  background:rgba(5,8,5,0.75); z-index:15;
+  background:rgba(90,140,160,0.85); z-index:15;
   display:none; flex-direction:column;
   align-items:center; justify-content:center;
   font-family:var(--font-mono);
@@ -314,8 +309,8 @@ body { font-family:var(--font-mono); font-size:12px; }
 #pause-screen.active { display:flex; }
 .pause-title {
   font-family:var(--font-display);
-  font-size:28px; letter-spacing:8px; color:var(--text-bright);
-  text-shadow:0 0 20px rgba(100,170,100,0.15);
+  font-size:28px; letter-spacing:8px; color:var(--cream);
+  font-weight:bold;
 }
 .pause-hint {
   font-size:11px; color:var(--text-dim); letter-spacing:3px; margin-top:16px;
@@ -324,47 +319,45 @@ body { font-family:var(--font-mono); font-size:12px; }
 /* ── QUIT CONFIRM ────────────────────────── */
 #quit-confirm {
   position:fixed; top:0; left:0; right:0; bottom:0;
-  background:rgba(5,8,5,0.8); z-index:20;
+  background:rgba(90,140,160,0.9); z-index:20;
   display:none; flex-direction:column;
   align-items:center; justify-content:center;
   font-family:var(--font-mono);
 }
 #quit-confirm.active { display:flex; }
 .quit-box {
-  background:var(--panel); border:1px solid #4a2a2a;
+  background:var(--panel); border:1px solid var(--accent);
   padding:28px 40px; text-align:center;
 }
-.quit-title { font-size:14px; color:#cc6655; letter-spacing:3px; margin-bottom:16px; }
+.quit-title { font-size:14px; color:var(--accent); letter-spacing:3px; margin-bottom:16px; font-weight:bold; }
 .quit-hint { font-size:11px; color:var(--text-dim); letter-spacing:2px; }
 .quit-hint .key-badge { margin:0 4px; }
 
+/* ── CROSSHAIR OVERLAY ────────────────────── */
+#horn-overlay {
+  position:fixed; top:50%; left:50%; z-index:4;
+  transform:translate(-50%, -50%);
+  pointer-events:none;
+  opacity:0; transition:opacity 0.3s;
+}
+#horn-overlay.active { opacity:1; }
+#horn-overlay svg { display:block; }
+
 /* ── PERSISTENT LOGO ──────────────────────── */
 #site-logo {
-  position:fixed; bottom:12px; right:14px; z-index:8;
-  width:96px; height:auto; opacity:0.5;
+  position:fixed; bottom:30px; left:14px; z-index:8;
+  width:96px; height:auto; opacity:0.8;
   pointer-events:none;
   transition:opacity 0.3s;
 }
 #site-logo:hover { opacity:0.8; }
 
-/* ── COOLDOWN INDICATOR ──────────────────── */
-#cooldown-bar {
-  position:fixed; bottom:68px; left:50%; transform:translateX(-50%);
-  width:120px; height:3px; background:#0a140a;
-  border:1px solid #1a2a1a; z-index:6;
-  pointer-events:none; opacity:0; transition:opacity 0.3s;
-  overflow:hidden;
-}
-#cooldown-bar.active { opacity:1; }
-#cooldown-fill {
-  height:100%; width:100%; background:var(--accent);
-  transform-origin:left; transition:transform 0.05s linear;
-}
+
 
 /* ── HUD KEYS HINT ───────────────────────── */
 .hud-keys {
   position:fixed; bottom:4px; right:12px; z-index:5;
-  font-size:8px; color:#1a2a1a; letter-spacing:1px;
+  font-size:8px; color:var(--text-dim); letter-spacing:1px;
   pointer-events:none; opacity:0; transition:opacity 0.3s;
 }
 .hud-keys.active { opacity:1; }
@@ -390,7 +383,7 @@ body { font-family:var(--font-mono); font-size:12px; }
 <div id="loading-screen" class="overlay active">
   <div class="panel">
     <div class="panel-sub">ACOUSTIC HERITAGE COLLECTIVE</div>
-    <div class="panel-title">SOUND MIRROR</div>
+    <div class="panel-title">PHANTOMS IN THE SKY</div>
     <hr class="panel-divider">
     <div id="loading-log"></div>
     <div class="progress-bar"><div class="fill" id="loading-fill"></div></div>
@@ -400,10 +393,15 @@ body { font-family:var(--font-mono); font-size:12px; }
 <!-- INSTRUCTIONS -->
 <div id="instructions-screen" class="overlay">
   <div class="panel" style="max-width:640px">
-    <div class="panel-sub" style="color:#4a6a4a">CLASSIFIED — RAF ACOUSTIC DEFENCE</div>
-    <div class="panel-title">SOUND MIRROR</div>
-    <div class="panel-sub">ACOUSTIC HERITAGE COLLECTIVE — 2026</div>
+    <div class="panel-sub" style="color:var(--warn)">CLASSIFIED — RAF ACOUSTIC DEFENCE</div>
+    <div class="panel-title">PHANTOMS IN THE SKY</div>
+    <div class="panel-sub">A GAME OF WAR WITHOUT VIOLENCE</div>
+    <div class="panel-sub" style="margin-top:6px">ACOUSTIC HERITAGE COLLECTIVE — 2026</div>
     <hr class="panel-divider">
+
+    <div style="margin:4px 0 8px; text-align:center;">
+      <img src="home.jpg" alt="Abbott's Cliff Sound Mirror" style="width:100%; max-width:400px; border:1px solid var(--border); opacity:0.85; border-radius:2px;">
+    </div>
 
     <div class="briefing-section">
       <div class="briefing-label">◆ BRIEFING</div>
@@ -434,7 +432,7 @@ body { font-family:var(--font-mono); font-size:12px; }
       </div>
     </div>
 
-    <div class="briefing-section" style="border-top:1px solid var(--border); font-size:10px; color:#6a7a65; line-height:1.75; padding-top:12px">
+    <div class="briefing-section" style="border-top:1px solid var(--border); font-size:10px; line-height:1.75; padding-top:12px">
       <div class="briefing-label">◆ RULES OF ENGAGEMENT</div>
       Sweep the horn to find peak engine sound intensity<br>
       Press SPACE when you hear maximum signal — tolerance varies by wave<br>
@@ -457,7 +455,7 @@ body { font-family:var(--font-mono); font-size:12px; }
     <div class="panel-sub">INCOMING</div>
     <div class="wave-number" id="wave-intro-num">WAVE 1</div>
     <div class="wave-name" id="wave-intro-name">CALM SKIES</div>
-    <div class="wave-prepare">PREPARE YOUR STATION</div>
+    <div class="wave-prepare">PREPARE YOUR EARS</div>
   </div>
 </div>
 
@@ -478,6 +476,7 @@ body { font-family:var(--font-mono); font-size:12px; }
       <span class="on">♦</span><span class="on">♦</span><span class="on">♦</span>
     </div>
     <div class="hud-streak" id="hud-streak"></div>
+
   </div>
 </div>
 <div id="hud-message"></div>
@@ -487,12 +486,22 @@ body { font-family:var(--font-mono); font-size:12px; }
     <div class="effective-zone" id="horn-zone"></div>
     <div class="needle" id="horn-needle" style="left:50%"></div>
   </div>
-  <div class="horn-scale">
-    <span>-180°</span><span>-90°</span><span>0°</span><span>90°</span><span>180°</span>
-  </div>
+  
   <div class="horn-angle-readout" id="horn-readout">HORN: 0.0°</div>
+
 </div>
-<div id="cooldown-bar"><div id="cooldown-fill"></div></div>
+<div id="cooldown-bar"><div id="cooldown-fill"></div>
+</div>
+
+<!-- CROSSHAIR + 3D horn is loaded into the scene -->
+<div id="horn-overlay">
+  <svg width="24" height="24" viewBox="0 0 24 24">
+    <line x1="12" y1="4" x2="12" y2="10" stroke="#c8102e" stroke-width="1" opacity="0.5"/>
+    <line x1="12" y1="14" x2="12" y2="20" stroke="#c8102e" stroke-width="1" opacity="0.5"/>
+    <line x1="4" y1="12" x2="10" y2="12" stroke="#c8102e" stroke-width="1" opacity="0.5"/>
+    <line x1="14" y1="12" x2="20" y2="12" stroke="#c8102e" stroke-width="1" opacity="0.5"/>
+  </svg>
+</div>
 
 <!-- DEBUG RADAR MAP -->
 <div id="radar-map">
@@ -524,7 +533,7 @@ body { font-family:var(--font-mono); font-size:12px; }
 <!-- GAME OVER -->
 <div id="gameover-screen" class="overlay">
   <div class="panel" style="max-width:520px">
-    <div class="panel-sub" style="color:#6a3a3a">TRANSMISSION ENDED</div>
+    <div class="panel-sub" style="color:var(--warn)">TRANSMISSION ENDED</div>
     <div class="gameover-title">MISSION OVER</div>
     <div class="stats-grid">
       <div><div class="stat-label">FINAL SCORE</div><div class="stat-value" id="go-score">0</div></div>
@@ -533,7 +542,7 @@ body { font-family:var(--font-mono); font-size:12px; }
       <div><div class="stat-label">ACCURACY</div><div class="stat-value small" id="go-accuracy">0%</div></div>
     </div>
     <div id="go-input-section">
-      <div style="font-size:10px;color:#6a7a65;letter-spacing:2px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--cream);letter-spacing:2px;margin-bottom:10px">
         ENTER YOUR CALLSIGN FOR THE HONOUR ROLL
       </div>
       <div class="callsign-row">
@@ -566,10 +575,11 @@ body { font-family:var(--font-mono); font-size:12px; }
 
 <!-- ═══ THREE.JS ═══ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  SOUND MIRROR GAME — Standalone
+//  PHANTOMS IN THE SKY GAME — Standalone
 //  Acoustic Heritage Collective, 2026
 // ═══════════════════════════════════════════════════════════════
 
@@ -578,17 +588,17 @@ body { font-family:var(--font-mono); font-size:12px; }
 
 // ── CONSTANTS ──────────────────────────────────────────────────
 const FIELD_DEPTH   = 40000;    // 40km
-const FIELD_WIDTH   = 10000;    // ±10km spawn width (gives ~14° at 40km, within detection range)
-const TARGET_WIDTH  = 3000;     // ±3km at y=0
-const SPEED         = 50;       // 50 m/s (180 km/h)
+const FIELD_WIDTH   = 25000;    // ±30km spawn width (gives ~14° at 40km, within detection range)
+const TARGET_WIDTH  = 25000;     // ±3km at y=0
+const SPEED         = 60;       // 50 m/s (180 km/h)
 const SOURCE_DB     = 140;      // dB @ 1m
-const MIRROR_MAX_ANGLE = 16;
-const HORN_RANGE    = 15;       // ±15°
+const MIRROR_MAX_ANGLE = 30;
+const HORN_RANGE    = 30;       // ±15°
 const BREACH_ANGLE  = 30;
 const BREACH_DIST   = 5000;     // 5km
 const MAX_LIVES     = 3;
 const BASE_PTS      = 100;
-const MISS_COOLDOWN = 1.5;     // seconds between detection attempts
+const MISS_COOLDOWN = 1;     // seconds between detection attempts
 const MISS_PENALTY  = 50;      // points lost per miss
 
 const MIRROR_GAIN = [
@@ -597,23 +607,20 @@ const MIRROR_GAIN = [
 ];
 
 const WAVES = [
-  {n:"Calm Skies",     si:8,  mx:2,  w:"clear",         ab:0,  tol:1.5 },
-  {n:"First Patrol",   si:6,  mx:3,  w:"clear",         ab:0,  tol:1.5 },
-  {n:"Morning Watch",  si:5,  mx:4,  w:"seagulls",      ab:3,  tol:1.5 },
-  {n:"Channel Breeze", si:4,  mx:5,  w:"light_wind",    ab:5,  tol:1.25},
-  {n:"Coastal Winds",  si:4,  mx:6,  w:"wind",          ab:8,  tol:1.25},
-  {n:"Growing Threat", si:3,  mx:7,  w:"wind_seagulls", ab:10, tol:1   },
-  {n:"Rain Front",     si:3,  mx:8,  w:"rain",          ab:12, tol:1   },
-  {n:"Heavy Squall",   si:2,  mx:9,  w:"rain_wind",     ab:15, tol:1   },
-  {n:"Storm Warning",  si:2,  mx:10, w:"storm",         ab:18, tol:0.75},
-  {n:"The Blitz",      si:1.5,mx:12, w:"thunder_storm", ab:22, tol:0.75},
+  {n:"1920s TRIALS",       si:8,  mx:2,  w:"clear",         ab:0,  tol:1.2, spd:30,  eng:'engine_1920s.mp3' },
+  {n:"1939-45 BLITZ",      si:6,  mx:3,  w:"storm",         ab:5,  tol:1.0, spd:110, eng:'engine_1940s.mp3' },
+  {n:"1950s KOREA",        si:5,  mx:3,  w:"overcast",      ab:8,  tol:0.8, spd:280, eng:'engine_1950s.mp3' },
+  {n:"1979-89 AFGHAN",     si:4,  mx:3,  w:"haze",          ab:10, tol:0.7, spd:260, eng:'engine_1980s.mp3' },
+  {n:"1982 FALKLANDS",     si:3,  mx:3,  w:"fog",           ab:12, tol:0.6, spd:300, eng:'engine_1982.mp3' },
+  {n:"1991 DESERT STORM",  si:2,  mx:3,  w:"clear",         ab:15, tol:0.5, spd:650, eng:'engine_1991.mp3' },
+  {n:"2025 EASTERN FRONT", si:1.5,mx:3,  w:"storm",         ab:20, tol:0.4, spd:850, eng:'engine_2025.mp3' },
 ];
 
 function getWave(i) {
   if (i < WAVES.length) return WAVES[i];
   const e = i - WAVES.length + 1;
-  return {n:"Endless War "+e, si:Math.max(1,1.5-e*0.1), mx:12+e*2,
-    w:"thunder_storm", ab:25+e, tol:Math.max(0.3,0.75-e*0.05)};
+  return {n:"Endless War "+e, si:Math.max(1,1.5-e*0.1), mx:3,
+    w:"storm", ab:25+e, tol:Math.max(0.15, 0.4-e*0.03), spd:850+e*50, eng:'engine_2025.mp3'};
 }
 function detectionsNeeded(i) { return i<3?3:i<6?4:i<9?5:6; }
 function weatherMult(i) { return i<3?1:i<5?1.3:i<7?1.6:i<9?2:3; }
@@ -646,28 +653,82 @@ function showHud(on) {
   $('radar-map').classList.toggle('active', on);
   $('cooldown-bar').classList.toggle('active', on);
   $('hud-keys').classList.toggle('active', on);
+  $('horn-overlay').classList.toggle('active', on);
 }
 
-// ── LEADERBOARD (localStorage) ─────────────────────────────────
-// Using localStorage for real hosting (persistent storage API is claude.ai only)
-const LB_KEY = 'soundmirror_leaderboard';
+// ── LEADERBOARD (Google Sheets cloud) ─────────────────────────
+// STEP 1: Create a Google Sheet with headers: name | score | wave | date
+// STEP 2: Go to Extensions → Apps Script, paste the AppsScript.js code
+// STEP 3: Deploy as Web App (Anyone can access), copy the URL below:
+const LB_API = 'https://script.google.com/macros/s/AKfycbwOoTrAmlpxRWjbfIyZ6GEBr_wjU9bsm-gCZDFZP6LQ6PPFm349urXIXDnU-4oin0kD/exec';
 
-function loadLB() {
+// Local cache + fallback
+let _lbCache = [];
+let _lbLoaded = false;
+
+async function loadLBRemote() {
+  if (LB_API.includes('PASTE_YOUR')) {
+    try { _lbCache = JSON.parse(localStorage.getItem('phantoms_lb')) || []; } catch(e) { _lbCache = []; }
+    _lbLoaded = true;
+    return;
+  }
   try {
-    const d = localStorage.getItem(LB_KEY);
-    return d ? JSON.parse(d) : [];
-  } catch(e) { return []; }
+    const data = await new Promise((resolve) => {
+      const cbName = 'phantomsLB_' + Math.random().toString(36).slice(2);
+      // Register global callback
+      window[cbName] = function(d) {
+        resolve(d);
+        delete window[cbName];
+      };
+      // Inject script tag — browser follows redirects for script src natively
+      const s = document.createElement('script');
+      s.src = LB_API + '?action=read&callback=' + cbName + '&t=' + Date.now();
+      s.onload = function() { setTimeout(() => { try { document.head.removeChild(s); } catch(e){} }, 100); };
+      s.onerror = function() {
+        console.warn('JSONP script load error');
+        delete window[cbName];
+        resolve(null);
+        try { document.head.removeChild(s); } catch(e){}
+      };
+      document.head.appendChild(s);
+      // Timeout
+      setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve(null); } }, 10000);
+    });
+    if (data && Array.isArray(data)) {
+      _lbCache = data;
+      try { localStorage.setItem('phantoms_lb', JSON.stringify(_lbCache)); } catch(e) {}
+      console.log('Leaderboard loaded from cloud:', _lbCache.length, 'scores');
+    } else {
+      try { _lbCache = JSON.parse(localStorage.getItem('phantoms_lb')) || []; } catch(e) { _lbCache = []; }
+      console.warn('Cloud read failed, using local cache');
+    }
+  } catch(e) {
+    console.warn('LB load error:', e);
+    try { _lbCache = JSON.parse(localStorage.getItem('phantoms_lb')) || []; } catch(e2) { _lbCache = []; }
+  }
+  _lbLoaded = true;
+  renderLB();
 }
-function saveLB(entries) {
-  try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch(e) {}
+
+async function addScoreRemote(entry) {
+  _lbCache.push(entry);
+  _lbCache.sort((a,b) => b.score - a.score);
+  _lbCache = _lbCache.slice(0, 50);
+  try { localStorage.setItem('phantoms_lb', JSON.stringify(_lbCache)); } catch(e) {}
+  if (LB_API.includes('PASTE_YOUR')) return;
+  // Write via JSONP
+  const cbName = 'phantomsW_' + Math.random().toString(36).slice(2);
+  window[cbName] = function() { delete window[cbName]; console.log('Score saved to cloud'); };
+  const s = document.createElement('script');
+  s.src = LB_API + '?action=write&name=' + encodeURIComponent(entry.name) + '&score=' + entry.score + '&wave=' + entry.wave + '&callback=' + cbName;
+  document.head.appendChild(s);
+  setTimeout(() => { try { delete window[cbName]; document.head.removeChild(s); } catch(e){} }, 10000);
 }
-function addScore(entry) {
-  const lb = loadLB();
-  lb.push(entry);
-  lb.sort((a,b) => b.score - a.score);
-  saveLB(lb.slice(0, 50)); // keep top 50
+
+function getTop10() {
+  const sorted = [..._lbCache].sort((a,b) => b.score - a.score);
+  return sorted.slice(0, 10);
 }
-function getTop10() { return loadLB().slice(0,10); }
 
 function renderLB() {
   const list = $('lb-list');
@@ -687,6 +748,9 @@ function renderLB() {
   }).join('');
 }
 
+// Load leaderboard on startup
+loadLBRemote();
+
 
 // ═══════════════════════════════════════════════════════════════
 //  AUDIO ENGINE
@@ -695,11 +759,14 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.master = null;
-    this.fBus = null; // formation bus
+    this.fBus = null;
     this.nodes = new Map();
     this.ok = false;
     this._sgInt = null;
     this._thTimer = 0;
+    this._buffers = {};
+    this._currentWxFile = null;
+    this._wxSrc = null;
   }
 
   init() {
@@ -715,172 +782,229 @@ class AudioEngine {
 
     // Stethoscope: lowpass 1kHz
     this.sLP = this.ctx.createBiquadFilter();
-    this.sLP.type='lowpass'; this.sLP.frequency.value=1000; this.sLP.Q.value=0.7;
+    this.sLP.type='lowpass'; this.sLP.frequency.value=800; this.sLP.Q.value=0.7;
 
-    // Stethoscope: peaking 70Hz +12dB (bass zone 30-120Hz)
+    // Stethoscope: peaking 50Hz +12dB (bass zone 30-120Hz)
     this.sPk1 = this.ctx.createBiquadFilter();
-    this.sPk1.type='peaking'; this.sPk1.frequency.value=70;
-    this.sPk1.gain.value=12; this.sPk1.Q.value=1.2;
+    this.sPk1.type='peaking'; this.sPk1.frequency.value=50;
+    this.sPk1.gain.value=12; this.sPk1.Q.value=1;
 
     // Horn: peaking 50Hz +6dB
     this.sPk2 = this.ctx.createBiquadFilter();
     this.sPk2.type='peaking'; this.sPk2.frequency.value=50;
-    this.sPk2.gain.value=6; this.sPk2.Q.value=3;
+    this.sPk2.gain.value=12; this.sPk2.Q.value=4;
 
     this.fBus.connect(this.sLP).connect(this.sPk1).connect(this.sPk2).connect(this.master);
 
-    // Ambient
+    // Pre-load all MP3 buffers
+    this._preloadAll();
+
+    // Init ambient (will start when buffers are ready)
     this._initAmbient();
     this.ok = true;
   }
 
-  _pinkBuf(dur) {
-    const sz = this.ctx.sampleRate*dur;
-    const buf = this.ctx.createBuffer(1, sz, this.ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-    for(let i=0;i<sz;i++){
-      const w=Math.random()*2-1;
-      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
-      b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
-      b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
-      d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.06;
-      b6=w*0.115926;
+  async _loadBuffer(url) {
+    if (this._buffers[url]) return this._buffers[url];
+    try {
+      const resp = await fetch(url);
+      const ab = await resp.arrayBuffer();
+      const buf = await this.ctx.decodeAudioData(ab);
+      this._buffers[url] = buf;
+      return buf;
+    } catch(e) {
+      console.warn('Failed to load audio:', url, e);
+      return null;
     }
-    return buf;
+  }
+
+  _preloadAll() {
+    // Pre-load all audio files in parallel
+    const files = ['fokker.mp3','ambient.mp3','gaviotas.mp3','viento.mp3','lluvia.mp3','tormenta.mp3','truenos.mp3'];
+    files.forEach(f => this._loadBuffer(f));
   }
 
   _initAmbient() {
-    // Coastal ambient: pink noise through lowpass
-    const nb = this._pinkBuf(3);
-    this.ambSrc = this.ctx.createBufferSource();
-    this.ambSrc.buffer = nb; this.ambSrc.loop = true;
+    // Ambient gain
     this.ambGain = this.ctx.createGain();
-    this.ambGain.gain.value = dbGain(50-80);
-    const lp = this.ctx.createBiquadFilter();
-    lp.type='lowpass'; lp.frequency.value=800; lp.Q.value=0.5;
-    this.ambSrc.connect(lp).connect(this.ambGain).connect(this.master);
-    this.ambSrc.start();
+    this.ambGain.gain.value = dbGain(50-70);
 
-    // Weather noise layer
+    // Weather gain
     this.wxGain = this.ctx.createGain();
     this.wxGain.gain.value = 0;
-    const wn = this.ctx.createBufferSource();
-    wn.buffer = this._pinkBuf(4); wn.loop = true;
-    const wlp = this.ctx.createBiquadFilter();
-    wlp.type='lowpass'; wlp.frequency.value=2000;
-    wn.connect(wlp).connect(this.wxGain).connect(this.master);
-    wn.start();
 
     // Seagull gain
     this.sgGain = this.ctx.createGain();
     this.sgGain.gain.value = 0;
     this.sgGain.connect(this.master);
+
+    // Start ambient MP3 when loaded
+    this._loadBuffer('ambient.mp3').then(buf => {
+      if (!buf || !this.ctx) return;
+      this.ambSrc = this.ctx.createBufferSource();
+      this.ambSrc.buffer = buf;
+      this.ambSrc.loop = true;
+      const lp = this.ctx.createBiquadFilter();
+      lp.type='lowpass'; lp.frequency.value=8000; lp.Q.value=0.5;
+      this.ambSrc.connect(lp).connect(this.ambGain).connect(this.master);
+      this.ambSrc.start();
+      console.log('Ambient audio started');
+    });
   }
 
   setWeather(boostDB, weather) {
     if (!this.ctx) return;
+    console.log('setWeather called:', {boostDB, weather});
     const t = this.ctx.currentTime;
-    const wv = boostDB>0 ? dbGain(boostDB-60) : 0;
-    this.wxGain.gain.setTargetAtTime(wv, t, 2);
+const wv = boostDB > 0 ? dbGain(boostDB - 30) : 0;
+this.wxGain.gain.setTargetAtTime(wv, t, 5);
+
+    // Determine which weather MP3 to play
+    let wxFile = null;
+    if (weather.includes('thunder') || weather === 'storm') wxFile = 'tormenta.mp3';
+    else if (weather.includes('rain')) wxFile = 'lluvia.mp3';
+    else if (weather === 'fog') wxFile = 'viento.mp3'; // fog = wind sound
+    else if (weather === 'haze') wxFile = 'viento.mp3'; // haze = light wind
+    else if (weather === 'overcast') wxFile = 'ambient.mp3'; // overcast = ambient
+    else if (weather.includes('wind')) wxFile = 'viento.mp3';
+    
+    console.log('Weather file determined:', wxFile, 'current:', this._currentWxFile);
+
+    if (wxFile && wxFile !== this._currentWxFile) {
+      console.log('Loading new weather file:', wxFile);
+      this._currentWxFile = wxFile;
+      this._loadBuffer(wxFile).then(buf => {
+        if (!buf || !this.ctx) return;
+        console.log('Weather buffer loaded, starting playback');
+        // Stop previous weather source
+        if (this._wxSrc) { try { this._wxSrc.stop(); } catch(e) {} }
+        this._wxSrc = this.ctx.createBufferSource();
+        this._wxSrc.buffer = buf;
+        this._wxSrc.loop = true;
+        this._wxSrc.connect(this.wxGain).connect(this.master);
+        this._wxSrc.start();
+        console.log('Weather audio playing');
+      });
+    } else if (!wxFile && this._currentWxFile) {
+      // No weather — stop weather source
+      console.log('Stopping weather audio');
+      this._currentWxFile = null;
+      if (this._wxSrc) { try { this._wxSrc.stop(); } catch(e) {} this._wxSrc = null; }
+    }
+
+    // Seagulls
     if (weather.includes('seagull')) this._startSG();
-    else { this.sgGain.gain.setTargetAtTime(0,t,0.5); this._stopSG(); }
+else { this.sgGain.gain.setTargetAtTime(0, t, 3); this._stopSG(); }
   }
 
   _startSG() {
     if (this._sgInt) return;
-    const fire = () => {
-      if (!this.ctx) return;
-      const o=this.ctx.createOscillator(); o.type='sine';
-      const bf=2000+Math.random()*1500; o.frequency.value=bf;
-      const g=this.ctx.createGain(); g.gain.value=0;
-      const t=this.ctx.currentTime;
-      g.gain.setTargetAtTime(0.015,t,0.05);
-      g.gain.setTargetAtTime(0,t+0.15+Math.random()*0.2,0.08);
-      o.frequency.setTargetAtTime(bf*1.3,t,0.1);
-      o.frequency.setTargetAtTime(bf*0.7,t+0.2,0.15);
-      o.connect(g).connect(this.master);
-      o.start(t); o.stop(t+0.6);
-      this._sgInt = setTimeout(fire, 2000+Math.random()*5000);
-    };
-    fire();
+    this._loadBuffer('gaviotas.mp3').then(buf => {
+      if (!buf) return;
+      const fire = () => {
+        if (!this.ctx) return;
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        // Random pitch shift for variety
+        src.playbackRate.value = 0.8 + Math.random() * 0.4;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.07;
+        src.connect(g).connect(this.sgGain);
+        this.sgGain.gain.value = 1;
+        src.start();
+        this._sgInt = setTimeout(fire, 3000 + Math.random() * 8000);
+      };
+      fire();
+    });
   }
   _stopSG() { if(this._sgInt){clearTimeout(this._sgInt);this._sgInt=null;} }
 
   thunder() {
     if (!this.ctx) return;
-    const t=this.ctx.currentTime;
-    const sz=this.ctx.sampleRate*2;
-    const buf=this.ctx.createBuffer(1,sz,this.ctx.sampleRate);
-    const d=buf.getChannelData(0);
-    for(let i=0;i<sz;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(this.ctx.sampleRate*0.8));
-    const s=this.ctx.createBufferSource(); s.buffer=buf;
-    const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=120; lp.Q.value=1;
-    const g=this.ctx.createGain(); g.gain.value=0.25;
-    s.connect(lp).connect(g).connect(this.master);
-    s.start(t); s.stop(t+2.5);
+    this._loadBuffer('truenos.mp3').then(buf => {
+      if (!buf || !this.ctx) return;
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      // Random pitch for variety
+      src.playbackRate.value = 0.85 + Math.random() * 0.3;
+      const g = this.ctx.createGain();
+      g.gain.value = 0.3;
+      src.connect(g).connect(this.master);
+      src.start();
+    });
   }
 
-  // ── Formation audio ──
-  addFormation(id) {
+  // ── Formation audio (engine sounds) ──
+  addFormation(id, engineFile) {
     if (!this.ctx) return;
-    const o1=this.ctx.createOscillator(); o1.type='sawtooth';
-    o1.frequency.value=55+Math.random()*5;
-    const o2=this.ctx.createOscillator(); o2.type='square';
-    o2.frequency.value=27+Math.random()*3;
-    const mix=this.ctx.createGain(); mix.gain.value=0.4;
-    const dg=this.ctx.createGain(); dg.gain.value=0;
-    const dlp=this.ctx.createBiquadFilter(); dlp.type='lowpass';
-    dlp.frequency.value=8000; dlp.Q.value=0.5;
-    const mg=this.ctx.createGain(); mg.gain.value=0;
-    o1.connect(mix); o2.connect(mix);
-    mix.connect(dg).connect(dlp).connect(mg).connect(this.fBus);
-    o1.start(); o2.start();
-    this.nodes.set(id, {o1,o2,mix,dg,dlp,mg});
+    if (!engineFile) engineFile = 'fokker.mp3'; // fallback
+    this._loadBuffer(engineFile).then(buf => {
+      if (!buf || !this.ctx) return;
+      // Check formation still exists (might have been removed during load)
+      if (this.nodes.has(id)) return;
+
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      // Slight random detune so overlapping formations sound different
+      src.playbackRate.value = 0.85 + Math.random() * 0.14;
+
+      const dg = this.ctx.createGain(); dg.gain.value = 0;
+      const dlp = this.ctx.createBiquadFilter(); dlp.type = 'lowpass';
+      dlp.frequency.value = 8000; dlp.Q.value = 0.5;
+      const mg = this.ctx.createGain(); mg.gain.value = -8;
+
+      src.connect(dg).connect(dlp).connect(mg).connect(this.fBus);
+      src.start();
+
+      this.nodes.set(id, {src, dg, dlp, mg});
+    });
   }
 
   updateFormation(id, dist, detAngle) {
-    const n=this.nodes.get(id);
-    if(!n||!this.ctx) return;
-    const t=this.ctx.currentTime;
+    const n = this.nodes.get(id);
+    if (!n || !this.ctx) return;
+    const t = this.ctx.currentTime;
     // Distance attenuation
     const att = distAtt(dist);
     const lvl = SOURCE_DB + att;
-    const dv = Math.max(0, dbGain(lvl-100));
+    const dv = Math.max(0, dbGain(lvl - 100));
     n.dg.gain.setTargetAtTime(dv, t, 0.05);
     // Atmospheric lowpass
-    const dr = Math.min(dist/FIELD_DEPTH, 1);
-    const fc = 8000-dr*7500;
-    n.dlp.frequency.setTargetAtTime(Math.max(200,fc), t, 0.05);
+    const dr = Math.min(dist / FIELD_DEPTH, 1);
+    const fc = 8000 - dr * 7500;
+    n.dlp.frequency.setTargetAtTime(Math.max(200, fc), t, 0.05);
     // Mirror gain
     const mdb = mirrorGain(detAngle);
-    n.mg.gain.setTargetAtTime(dbGain(mdb)*0.5, t, 0.05);
+    n.mg.gain.setTargetAtTime(dbGain(mdb) * 0.6, t, 0.05);
   }
 
   removeFormation(id) {
-    const n=this.nodes.get(id);
-    if(!n) return;
-    const t=this.ctx.currentTime;
-    n.dg.gain.setTargetAtTime(0,t,0.1);
+    const n = this.nodes.get(id);
+    if (!n) return;
+    const t = this.ctx.currentTime;
+    n.dg.gain.setTargetAtTime(0, t, 0.1);
     setTimeout(() => {
-      try{n.o1.stop();n.o2.stop();n.o1.disconnect();n.o2.disconnect();
-        n.mix.disconnect();n.dg.disconnect();n.dlp.disconnect();n.mg.disconnect();}catch(e){}
+      try {
+        n.src.stop(); n.src.disconnect();
+        n.dg.disconnect(); n.dlp.disconnect(); n.mg.disconnect();
+      } catch(e) {}
       this.nodes.delete(id);
     }, 300);
   }
 
-  // ── SFX ──
+  // ── SFX (kept as oscillators — these are UI sounds, not environmental) ──
   sfxDetect() {
     const t=this.ctx.currentTime;
     const o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=880;
     const g=this.ctx.createGain(); g.gain.value=0;
-    g.gain.setTargetAtTime(0.12,t,0.01); g.gain.setTargetAtTime(0,t+0.15,0.05);
+    g.gain.setTargetAtTime(0.12,t,0.001); g.gain.setTargetAtTime(0,t+0.15,0.005);
     o.connect(g).connect(this.master); o.start(t); o.stop(t+0.4);
     setTimeout(()=>{
       const o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=1320;
       const g2=this.ctx.createGain(); g2.gain.value=0;
       const t2=this.ctx.currentTime;
-      g2.gain.setTargetAtTime(0.12,t2,0.01); g2.gain.setTargetAtTime(0,t2+0.2,0.05);
+      g2.gain.setTargetAtTime(0.12,t2,0.001); g2.gain.setTargetAtTime(0,t2+0.2,0.005);
       o2.connect(g2).connect(this.master); o2.start(t2); o2.stop(t2+0.5);
     },120);
   }
@@ -889,7 +1013,7 @@ class AudioEngine {
     const o=this.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=200;
     o.frequency.setTargetAtTime(100,t,0.15);
     const g=this.ctx.createGain(); g.gain.value=0;
-    g.gain.setTargetAtTime(0.1,t,0.01); g.gain.setTargetAtTime(0,t+0.3,0.1);
+    g.gain.setTargetAtTime(0.1,t,0.005); g.gain.setTargetAtTime(0,t+0.3,0.05);
     o.connect(g).connect(this.master); o.start(t); o.stop(t+0.6);
   }
   sfxBreach() {
@@ -898,7 +1022,7 @@ class AudioEngine {
       const o=this.ctx.createOscillator(); o.type='square'; o.frequency.value=150-i*30;
       const g=this.ctx.createGain(); g.gain.value=0;
       const s=t+i*0.2;
-      g.gain.setTargetAtTime(0.1,s,0.01); g.gain.setTargetAtTime(0,s+0.15,0.05);
+      g.gain.setTargetAtTime(0.1,s,0.005); g.gain.setTargetAtTime(0,s+0.15,0.01);
       o.connect(g).connect(this.master); o.start(s); o.stop(s+0.3);
     }
   }
@@ -906,13 +1030,14 @@ class AudioEngine {
     const t=this.ctx.currentTime;
     const o=this.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=300;
     o.frequency.linearRampToValueAtTime(50,t+1.5);
-    const g=this.ctx.createGain(); g.gain.value=0.12;
-    g.gain.setTargetAtTime(0,t+1,0.3);
+    const g=this.ctx.createGain(); g.gain.value=0.04;
+    g.gain.setTargetAtTime(0,t+1,0.2);
     o.connect(g).connect(this.master); o.start(t); o.stop(t+2);
   }
 
   destroy() {
     this._stopSG();
+    if (this._wxSrc) { try { this._wxSrc.stop(); } catch(e) {} }
     for(const[id] of this.nodes) this.removeFormation(id);
     if(this.ctx){this.ctx.close();this.ctx=null;}
     this.ok=false;
@@ -920,7 +1045,6 @@ class AudioEngine {
 
   muteAll() {
     if (!this.ctx) return;
-    // Suspend stops ALL audio processing — complete silence
     if (this.ctx.state === 'running') this.ctx.suspend();
   }
 
@@ -930,9 +1054,9 @@ class AudioEngine {
   }
 
   stopAll() {
-    // Kill all formation audio + ambient for game over / quit
     for(const[id] of this.nodes) this.removeFormation(id);
     this._stopSG();
+    if (this._wxSrc) { try { this._wxSrc.stop(); } catch(e) {} this._wxSrc = null; this._currentWxFile = null; }
     if (this.ambGain) this.ambGain.gain.value = 0;
     if (this.wxGain) this.wxGain.gain.value = 0;
     if (this.sgGain) this.sgGain.gain.value = 0;
@@ -956,24 +1080,36 @@ class Scene3D {
     this.r.setSize(this.cv.clientWidth, this.cv.clientHeight);
     this.r.setPixelRatio(Math.min(window.devicePixelRatio,2));
     this.r.shadowMap.enabled = true;
-    this.r.setClearColor(0x0d1520);
+//    this.r.setClearColor(0x030a14);
 
     this.sc = new T.Scene();
-    this.sc.fog = new T.FogExp2(0x0d1520, 0.00012);
+//    this.sc.fog = new T.FogExp2(0x030a14, 0.00012);
 
-    // Camera = operator's eyes, at head height (~1.7m above ground + standing position)
-    // Operator is at (0, 0, -4) looking towards mirror at (0, 0, 0) and beyond to the sea
-    this.cam = new T.PerspectiveCamera(65, this.cv.clientWidth/this.cv.clientHeight, 0.1, 50000);
-    // Eye height ~3.5m (standing on slight elevation near mirror)
+
+// 360 background
+const bgLoader = new T.TextureLoader();
+bgLoader.load('bg-eq-1920s.png', (texture) => {
+  texture.mapping = T.EquirectangularReflectionMapping;
+  texture.colorSpace = T.SRGBColorSpace;
+  this.sc.background = texture;
+  this.sc.environment = texture;
+});
+
+
+    // Camera = operator's eyes, looking at the mirror
+    this.cam = new T.PerspectiveCamera(70, this.cv.clientWidth/this.cv.clientHeight, 0.1, 50000);
     this.camPivot = new T.Group();
-    this.camPivot.position.set(0, 3.5, -4); // operator position
-    this.cam.position.set(0, 0, 0); // relative to pivot
-    this.cam.lookAt(0, 0.5, 10); // look forward towards mirror and sea
+    this.camPivot.position.set(0, 3.4, -5.7);
+    this.cam.position.set(0, 0, 0);
+    this.cam.lookAt(0, 3.4, 40);
     this.camPivot.add(this.cam);
     this.sc.add(this.camPivot);
 
-    // Horn attached to camera view (always visible in first person, bottom of screen)
-    this._buildHornFP(T);
+    // Build mirror
+    this._buildMirror(T);
+
+    // Load horn.glb — attached to camera (fixed on screen like FPS weapon)
+    this._loadHorn();
 
     // Lights
     this.sc.add(new T.AmbientLight(0x3a5570, 0.4));
@@ -982,139 +1118,123 @@ class Scene3D {
     const rl = new T.DirectionalLight(0x6a90b4, 0.25);
     rl.position.set(10, 5, -10); this.sc.add(rl);
 
-    // Ground (cliff top)
-    const gnd = new T.Mesh(
-      new T.PlaneGeometry(400, 400),
-      new T.MeshStandardMaterial({color:0x1e3a12, roughness:0.92, metalness:0})
-    );
-    gnd.rotation.x=-Math.PI/2; gnd.receiveShadow=true; this.sc.add(gnd);
 
-    // Sea — far ahead (positive Z direction = towards enemy)
-    const sea = new T.Mesh(
-      new T.PlaneGeometry(80000, 80000),
-      new T.MeshStandardMaterial({color:0x0c1e30, roughness:0.3, metalness:0.1, transparent:true, opacity:0.9})
-    );
-    sea.rotation.x=-Math.PI/2; sea.position.set(0, -12, 400); this.sc.add(sea);
-
-    // Sky dome
-    const sky = new T.Mesh(
-      new T.SphereGeometry(30000, 24, 12),
-      new T.MeshBasicMaterial({color:0x0d1a28, side:T.BackSide})
-    );
-    this.sc.add(sky);
-
-    // Stars
-    const starsGeo = new T.BufferGeometry();
-    const starPos = [];
-    for(let i=0;i<600;i++){
-      const th=Math.random()*Math.PI*2, ph=Math.random()*Math.PI*0.5;
-      const r=20000+Math.random()*5000;
-      starPos.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
-    }
-    starsGeo.setAttribute('position', new T.Float32BufferAttribute(starPos,3));
-    this.sc.add(new T.Points(starsGeo, new T.PointsMaterial({color:0x667788, size:15})));
-
-    // Build mirror (in front of operator)
-    this._buildMirror(T);
 
     this.ready = true;
   }
 
-  _buildMirror(T) {
-    const g = new T.Group();
-    const cMat = new T.MeshStandardMaterial({color:0x787868, roughness:0.95, metalness:0});
+_buildMirror(T) {
+  const g = new T.Group();
 
-    // Concrete block — the mirror is a vertical wall
-    // Approximately 7m wide, 7.5m tall, 3.5m deep
-    const block = new T.Mesh(new T.BoxGeometry(7.2, 7.8, 3.8), cMat);
-    block.position.y = 3.9;
-    block.castShadow = true; block.receiveShadow = true;
-    g.add(block);
+  // --- Bloque de hormigón ---
+  const cMat = new T.MeshStandardMaterial({ color: 0x787868, roughness: 0.95, metalness: 0 });
+  const block = new T.Mesh(new T.BoxGeometry(7.2, 7.8, 3.8), cMat);
+  block.position.y = 3.9;
+  block.castShadow = true;
+  block.receiveShadow = true;
+  g.add(block);
 
-    // Spherical dish: 6.096m diameter → opening radius 3.048m
-    // Radius of curvature: 4.572m
-    // The dish is VERTICAL — carved into the face of the concrete block
-    // It faces NEGATIVE Z (towards the operator), reflecting sound from +Z (the sea)
-    const R = 4.572, rOpen = 3.048;
-    const thetaMax = Math.asin(rOpen / R);
-    const dishGeo = new T.SphereGeometry(R, 48, 32, 0, Math.PI*2, 0, thetaMax);
-    const dishMat = new T.MeshStandardMaterial({
-      color:0x9a9a88, roughness:0.65, metalness:0.05, side:T.DoubleSide
+  // --- Front mirror con textura ---
+const loader = new T.TextureLoader();
+loader.load('frontmirror_1920s.png', (texture) => {
+  const mirrorMat = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.DoubleSide
+  });
+
+  // Evitar z-fighting
+  mirrorMat.polygonOffset = true;
+  mirrorMat.polygonOffsetFactor = -1;
+  mirrorMat.polygonOffsetUnits = -1;
+
+  const mirrorPlane = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 7.8), mirrorMat);
+
+  // Posición: ligeramente delante de la cara del bloque
+  mirrorPlane.position.set(0, 4.2, -1.95); // z menor que la cara del bloque (-1.9)
+
+  g.add(mirrorPlane);
+  
+  // Store references for updates
+  this.mirrorMat = mirrorMat;
+  this.mirrorPlane = mirrorPlane;
+});
+
+  // Inclinación ligera del grupo si quieres
+  g.rotation.x = -5 * (Math.PI / 180);
+  g.position.set(0, 0, 0);
+
+  // Añadir grupo a la escena
+  this.sc.add(g);
+}
+
+
+  _loadHorn() {
+    const loader = new THREE.GLTFLoader();
+    loader.load('horn.glb', (gltf) => {
+      this.hornModel = gltf.scene;
+      
+      const box = new THREE.Box3().setFromObject(this.hornModel);
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+      
+      // Wrap in a group so we can center the geometry first
+      const hornGroup = new THREE.Group();
+      
+      // Offset model so its center is at origin of the group
+      this.hornModel.position.set(0, 0, -5);
+//this.hornModel.position.set(-center.x, -center.y, center.z);
+
+      hornGroup.add(this.hornModel);
+      
+      // Scale: model is ~6 long, we want ~2.5 units in view
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const s = 32 / maxDim;
+      hornGroup.scale.set(s, s, s);
+      
+      // Rotate: long axis is X, rotate so it points up (Z rotation)
+      // Then tilt it slightly forward so it angles towards the mirror
+      hornGroup.rotation.set(
+        Math.PI / 2.5,             // tilt forward (towards mirror above)
+        0,               // no yaw
+        Math.PI / 2      // X axis → up
+      );
+      
+      // Position in camera space: x=0 centered, y=up, -z=forward
+      hornGroup.position.set(0, -3, -8);
+      
+      // Disable fog, ensure always visible
+      this.hornModel.traverse(child => {
+        if (child.isMesh && child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach(m => { m.fog = false; m.depthTest = false; });
+          child.renderOrder = 999;
+        }
+      });
+      
+      this.hornGroup = hornGroup;
+      this.cam.add(hornGroup);
+      
+      const hornLight = new THREE.PointLight(0xffeedd, 1.0, 8);
+      hornLight.position.set(0, 1, -2);
+      this.cam.add(hornLight);
+      
+      console.log('Horn loaded — centered, size:', size.x.toFixed(2), size.y.toFixed(2), size.z.toFixed(2));
+    }, undefined, (err) => {
+      console.warn('Could not load horn.glb:', err);
     });
-    const dish = new T.Mesh(dishGeo, dishMat);
-
-    // The SphereGeometry with thetaStart=0 creates a cap around +Y axis.
-    // We need it facing -Z (towards operator). 
-    // Rotate: first tilt it so the opening faces -Z
-    dish.rotation.x = Math.PI / 2; // cap now opens towards -Z
-    // Position: center of curvature sphere sits inside the block
-    // The cap opening should be flush with the front face of the block
-    const capDepth = R - R * Math.cos(thetaMax); // how deep the cap is
-    dish.position.y = 4.5; // center height on the wall
-    dish.position.z = -1.9 + capDepth; // front face of block is at z ≈ -1.9
-    g.add(dish);
-
-    // Whole structure tilted 5° (leaning slightly forward)
-    g.rotation.x = -5 * (Math.PI / 180);
-
-    // Mirror at origin, facing +Z (sea), operator at -Z
-    g.position.set(0, 0, 0);
-    this.sc.add(g);
   }
 
-  _buildHornFP(T) {
-    // First-person horn: attached to camera, like a weapon in FPS
-    this.hornFP = new T.Group();
-    const brass = new T.MeshStandardMaterial({color:0xc89530, roughness:0.3, metalness:0.7, fog:false});
-    const darkMetal = new T.MeshStandardMaterial({color:0x333333, roughness:0.5, metalness:0.5, fog:false});
-
-    // Main tube — goes from near the operator out forward
-    const tube = new T.Mesh(new T.CylinderGeometry(0.025, 0.12, 2.2, 12), brass);
-    tube.rotation.x = Math.PI/2;
-    tube.position.set(0, 0, 1.1);
-    this.hornFP.add(tube);
-
-    // Bell (flared end, far from operator)
-    const bell = new T.Mesh(new T.CylinderGeometry(0.12, 0.35, 0.45, 16), brass);
-    bell.rotation.x = Math.PI/2;
-    bell.position.set(0, 0, 2.35);
-    this.hornFP.add(bell);
-
-    // Bell rim
-    const rim = new T.Mesh(new T.TorusGeometry(0.35, 0.02, 8, 16), brass);
-    rim.position.set(0, 0, 2.58);
-    this.hornFP.add(rim);
-
-    // Earpiece (near end)
-    const ear = new T.Mesh(new T.CylinderGeometry(0.02, 0.03, 0.12, 8), darkMetal);
-    ear.rotation.x = Math.PI/2;
-    ear.position.set(0, 0, -0.08);
-    this.hornFP.add(ear);
-
-    // Stethoscope tube curving down
-    const stetho = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.5, 6), darkMetal);
-    stetho.position.set(0, -0.28, -0.05);
-    stetho.rotation.z = 0.15;
-    this.hornFP.add(stetho);
-
-    // Support bracket
-    const bracket = new T.Mesh(new T.BoxGeometry(0.04, 0.04, 0.5), darkMetal);
-    bracket.position.set(0, -0.08, 0.6);
-    this.hornFP.add(bracket);
-
-    // Position: bottom-center of screen, extending forward
-    // Offset down and forward from camera eye
-    this.hornFP.position.set(0.15, -0.55, 0.8);
-    this.hornFP.rotation.y = 0; // straight ahead
-    this.cam.add(this.hornFP);
-  }
-
-  setViewAngle(deg) {
-    // Rotate the entire camera pivot — this is the first-person head rotation
-    // When horn moves left, view rotates left (you turn your head with the horn)
-    this.viewAngle = deg;
+  setViewAngle(yaw, pitch) {
+    // Yaw = horizontal rotation (left/right), affects detection
+    // Pitch = vertical look (up/down), purely visual
+    this.viewAngle = yaw;
     if (this.camPivot) {
-      this.camPivot.rotation.y = -deg * (Math.PI / 180);
+      this.camPivot.rotation.y = -yaw * (Math.PI / 180);
+      // Clamp pitch to ±60° so you can look up/down but not flip
+      const p = Math.max(-90, Math.min(90, pitch || 0));
+      this.camPivot.rotation.x = p * (Math.PI / 180);
     }
   }
 
@@ -1123,6 +1243,64 @@ class Scene3D {
     const w=this.cv.clientWidth, h=this.cv.clientHeight;
     this.r.setSize(w,h);
     this.cam.aspect=w/h; this.cam.updateProjectionMatrix();
+  }
+  
+  updateWave(waveNum) {
+    console.log('updateWave called for wave:', waveNum);
+    const mirrorFiles = ['frontmirror_1920s.png','frontmirror_1940s.png','frontmirror_1950s.png','frontmirror_1980s.png','frontmirror_1982.png','frontmirror_1991.png','frontmirror_2025.png'];
+    const bgEquirectangularFiles = ['bg-eq-1920s.png', 'bg-eq-1940s.png', 'bg-eq-1950s.png', 'bg-eq-1980s.png', 'bg-eq-1982.png', 'bg-eq-1991.png', 'bg-eq-2025.png'];
+    const skyColors = [0xc8d4dc, 0x6a7a8a, 0x9aaaBA, 0xe4d4b4, 0x8a9aaa, 0xffd4a4, 0x5a6a7a];
+    const fogDensities = [0.00012, 0.00045, 0.00025, 0.00030, 0.00055, 0.00015, 0.00050];
+
+    
+    if(waveNum < mirrorFiles.length && this.mirrorMat) {
+      console.log('Updating mirror texture to:', mirrorFiles[waveNum]);
+      const T = THREE;
+      const loader = new T.TextureLoader();
+      loader.load(mirrorFiles[waveNum], (texture) => {
+        this.mirrorMat.map = texture;
+        this.mirrorMat.needsUpdate = true;
+        console.log('Mirror texture updated successfully');
+      }, undefined, (err) => {
+        console.warn('Failed to load mirror texture:', mirrorFiles[waveNum], err);
+      });
+    } else {
+      console.warn('Cannot update mirror - mirrorMat not ready or invalid wave:', waveNum, 'mirrorMat exists:', !!this.mirrorMat);
+    }
+    
+// REEMPLAZAR TODO ESTE BLOQUE:
+if(waveNum < bgEquirectangularFiles.length) {
+  console.log('Updating equirectangular background to:', bgEquirectangularFiles[waveNum]);
+  const T = THREE;
+  const loader = new T.TextureLoader();
+  loader.load(bgEquirectangularFiles[waveNum], (texture) => {
+    texture.mapping = T.EquirectangularReflectionMapping;
+    texture.colorSpace = T.SRGBColorSpace;
+    if(this.sc.background) {
+      this.sc.background.dispose();
+    }
+    this.sc.background = texture;
+    this.sc.environment = texture;
+    console.log('Equirectangular background updated successfully');
+  }, undefined, (err) => {
+    console.warn('Failed to load background texture:', bgEquirectangularFiles[waveNum], err);
+  });
+}
+
+
+    if(waveNum < skyColors.length && this.sky) {
+      console.log('Updating sky color to:', skyColors[waveNum].toString(16));
+      this.sky.material.color.setHex(skyColors[waveNum]);
+    } else {
+      console.warn('Cannot update sky - sky not ready');
+    }
+    
+    if(waveNum < fogDensities.length && this.sc.fog) {
+      console.log('Updating fog density to:', fogDensities[waveNum]);
+      this.sc.fog.density = fogDensities[waveNum];
+    } else {
+      console.warn('Cannot update fog - fog not ready');
+    }
   }
 
   render() {
@@ -1170,7 +1348,7 @@ function updateHUD() {
   const pct = 50 + (state.hornAngle / 180) * 50;
   $('horn-needle').style.left = pct + '%';
   const inRange = Math.abs(state.hornAngle) <= HORN_RANGE;
-  $('horn-readout').textContent = `HORN: ${state.hornAngle.toFixed(1)}°${inRange ? '' : '  ⚠ OUT OF MIRROR RANGE'}`;
+  $('horn-readout').textContent = `HORN: ${state.hornAngle.toFixed(1)}°${inRange ? '' : '  ⚠ OUT OF RANGE'}`;
   $('horn-readout').style.color = inRange ? '' : '#aa5555';
 }
 
@@ -1225,7 +1403,7 @@ function startGame() {
     wave: 0, score: 0, lives: MAX_LIVES,
     formations: [], nextId: 0, lastSpawn: 0,
     waveDet: 0, totalDet: 0, totalAtt: 0,
-    hornAngle: 0, over: false, thunderT: 0,
+    hornAngle: 0, viewPitch: 0, over: false, thunderT: 0,
     lastAttemptTime: 0,
     paused: false,
     quitConfirm: false,
@@ -1243,6 +1421,9 @@ function showWaveIntro() {
   showOverlay('wave-intro');
   showHud(true);
   updateHUD();
+  
+  // Update visuals for this wave
+  scene.updateWave(state.wave);
 
   setTimeout(() => {
     if (phase === 'wave_intro' && state && !state.over) {
@@ -1254,8 +1435,8 @@ function showWaveIntro() {
       const sx = (Math.random()*2-1)*FIELD_WIDTH;
       const ex = (Math.random()*2-1)*TARGET_WIDTH;
       const td = Math.sqrt((ex-sx)**2 + FIELD_DEPTH**2);
-      state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:SPEED, detected:false, td, tr:0});
-      audio.addFormation(id);
+      state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:w.spd, detected:false, td, tr:0});
+      audio.addFormation(id, w.eng);
       state.lastSpawn = performance.now()/1000;
       lastT = 0; // reset dt calculation
       updateHUD();
@@ -1301,7 +1482,7 @@ function endGame() {
 function submitScore() {
   const name = $('callsign-input').value.replace(/[^a-zA-Z0-9\s\-_]/g,'').trim().toUpperCase().slice(0,12);
   if (!name || !state || !state._goData) return;
-  addScore({
+  addScoreRemote({
     name, score:state._goData.score, wave:state._goData.wave,
     detections:state._goData.det, accuracy:state._goData.acc, time:Date.now()
   });
@@ -1435,11 +1616,11 @@ function drawRadar() {
   rctx.beginPath(); rctx.arc(cx, cy, R+2, 0, Math.PI*2); rctx.clip();
 
   // Background
-  rctx.fillStyle = 'rgba(5,15,5,0.92)';
+  rctx.fillStyle = 'rgba(1,20,50,0.92)';
   rctx.fillRect(0, 0, w, h);
 
-  // Range rings (every 10km, max 40km)
-  rctx.strokeStyle = '#1a2a1a';
+  // Range rings
+  rctx.strokeStyle = 'rgba(107,164,184,0.25)';
   rctx.lineWidth = 1;
   for (let i = 1; i <= 4; i++) {
     const rr = R * (i/4);
@@ -1447,7 +1628,7 @@ function drawRadar() {
   }
 
   // Range labels
-  rctx.fillStyle = '#1e3e1e';
+  rctx.fillStyle = 'rgba(107,164,184,0.4)';
   rctx.font = '14px monospace';
   rctx.textAlign = 'center';
   for (let i = 1; i <= 4; i++) {
@@ -1455,13 +1636,13 @@ function drawRadar() {
   }
 
   // Cross hairs
-  rctx.strokeStyle = '#152515';
+  rctx.strokeStyle = 'rgba(107,164,184,0.15)';
   rctx.lineWidth = 0.5;
   rctx.beginPath(); rctx.moveTo(cx, cy-R); rctx.lineTo(cx, cy+R); rctx.stroke();
   rctx.beginPath(); rctx.moveTo(cx-R, cy); rctx.lineTo(cx+R, cy); rctx.stroke();
 
   // Angle reference lines every 5°
-  rctx.strokeStyle = '#0e1e0e';
+  rctx.strokeStyle = 'rgba(107,164,184,0.1)';
   rctx.lineWidth = 0.5;
   for (let deg = -30; deg <= 30; deg += 5) {
     if (deg === 0) continue;
@@ -1473,7 +1654,7 @@ function drawRadar() {
   }
 
   // Angle labels at edge
-  rctx.fillStyle = '#1a3a1a';
+  rctx.fillStyle = 'rgba(107,164,184,0.4)';
   rctx.font = '11px monospace';
   for (let deg = -30; deg <= 30; deg += 10) {
     const a = (-90 + deg) * Math.PI / 180;
@@ -1494,7 +1675,7 @@ function drawRadar() {
   }
 
   // Mirror effective zone (±16°) — filled
-  rctx.fillStyle = 'rgba(40,80,40,0.07)';
+  rctx.fillStyle = 'rgba(1,33,105,0.06)';
   const maRad = MIRROR_MAX_ANGLE * Math.PI / 180;
   rctx.beginPath();
   rctx.moveTo(cx, cy);
@@ -1502,7 +1683,7 @@ function drawRadar() {
   rctx.closePath();
   rctx.fill();
   // Mirror zone border
-  rctx.strokeStyle = '#2a4a2a';
+  rctx.strokeStyle = 'rgba(1,33,105,0.3)';
   rctx.lineWidth = 1;
   for (const sign of [-1, 1]) {
     const a = (-90 + sign * MIRROR_MAX_ANGLE) * Math.PI / 180;
@@ -1518,7 +1699,7 @@ function drawRadar() {
   rctx.setLineDash([4,4]);
   rctx.beginPath(); rctx.arc(cx, cy, br5, 0, Math.PI*2); rctx.stroke();
   rctx.setLineDash([]);
-  rctx.fillStyle = '#3a1a1a';
+  rctx.fillStyle = '#aa5555';
   rctx.font = '10px monospace';
   rctx.fillText('5km', cx + br5 + 4, cy - 2);
 
@@ -1528,14 +1709,14 @@ function drawRadar() {
   const beamAngle = -Math.PI/2 + hornRad;
   const tolRad = waveDef.tol * Math.PI / 180;
   // Tolerance cone
-  rctx.fillStyle = 'rgba(100,200,100,0.1)';
+  rctx.fillStyle = 'rgba(107,164,184,0.1)';
   rctx.beginPath();
   rctx.moveTo(cx, cy);
   rctx.arc(cx, cy, R, beamAngle - tolRad, beamAngle + tolRad);
   rctx.closePath();
   rctx.fill();
   // Beam center line
-  rctx.strokeStyle = 'rgba(100,220,100,0.6)';
+  rctx.strokeStyle = 'rgba(107,164,184,0.6)';
   rctx.lineWidth = 2;
   rctx.beginPath();
   rctx.moveTo(cx, cy);
@@ -1555,8 +1736,8 @@ function drawRadar() {
     const py = cy + Math.sin(radarAngle) * radarDist;
 
     if (f.detected) {
-      // Detected: dim green
-      rctx.fillStyle = 'rgba(80,150,80,0.4)';
+      // Detected: dim sky blue
+      rctx.fillStyle = 'rgba(107,164,184,0.4)';
       rctx.beginPath(); rctx.arc(px, py, 5, 0, Math.PI*2); rctx.fill();
     } else {
       // Active: bright red blip
@@ -1581,9 +1762,9 @@ function drawRadar() {
   }
 
   // Mirror position (center dot)
-  rctx.fillStyle = '#5a9a5a';
+  rctx.fillStyle = '#012169';
   rctx.beginPath(); rctx.arc(cx, cy, 5, 0, Math.PI*2); rctx.fill();
-  rctx.fillStyle = '#3a6a3a';
+  rctx.fillStyle = '#012169';
   rctx.font = '10px monospace';
   rctx.textAlign = 'center';
   rctx.fillText('MIRROR', cx, cy+16);
@@ -1632,15 +1813,15 @@ function gameLoop(now) {
     const sx = (Math.random()*2-1)*FIELD_WIDTH;
     const ex = (Math.random()*2-1)*TARGET_WIDTH;
     const td = Math.sqrt((ex-sx)**2 + FIELD_DEPTH**2);
-    state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:SPEED, detected:false, td, tr:0});
-    audio.addFormation(id);
+    state.formations.push({id, x:sx, y:FIELD_DEPTH, sx, sy:FIELD_DEPTH, ex, ey:0, spd:w.spd, detected:false, td, tr:0});
+    audio.addFormation(id, w.eng);
     state.lastSpawn = t;
   }
 
   // ── Update formations ──
   for (let i=state.formations.length-1; i>=0; i--) {
     const f = state.formations[i];
-    f.tr += SPEED * dt;
+    f.tr += f.spd * dt;
     const p = Math.min(f.tr / f.td, 1);
     f.x = f.sx + (f.ex - f.sx) * p;
     f.y = f.sy + (f.ey - f.sy) * p;
@@ -1748,29 +1929,47 @@ window.addEventListener('keydown', function(e) {
   }
 
   if (state && phase === 'playing') {
-    // Arrow keys = move horn/view together
-    const step = e.shiftKey ? 0.2 : 0.5;
+    // Arrow keys = move horn/view together — 0.2° per step (fine: 0.05°)
+    const step = e.shiftKey ? 0.05 : 0.2;
     if (e.code === 'ArrowLeft') {
-      state.hornAngle = clamp(state.hornAngle - step, -180, 180);
-      scene.setViewAngle(state.hornAngle);
+      state.hornAngle -= step;
+      scene.setViewAngle(state.hornAngle, state.viewPitch);
     }
     if (e.code === 'ArrowRight') {
-      state.hornAngle = clamp(state.hornAngle + step, -180, 180);
-      scene.setViewAngle(state.hornAngle);
+      state.hornAngle += step;
+      scene.setViewAngle(state.hornAngle, state.viewPitch);
+    }
+    if (e.code === 'ArrowUp') {
+      state.viewPitch = Math.min(90, state.viewPitch + step * 3);
+      scene.setViewAngle(state.hornAngle, state.viewPitch);
+    }
+    if (e.code === 'ArrowDown') {
+      state.viewPitch = Math.max(-90, state.viewPitch - step * 3);
+      scene.setViewAngle(state.hornAngle, state.viewPitch);
     }
   }
 });
 
-// Mouse control — rotates horn/view, reduced sensitivity
+// Mouse control — pointer lock for unlimited rotation
+// Click on canvas to lock, ESC unlocks (handled by browser)
+const MOUSE_SENSITIVITY = 0.06; // degrees per pixel
+const MOUSE_SENSITIVITY_Y = 0.04;
+
+canvas.addEventListener('click', function() {
+  if (phase === 'playing' && !state.paused) {
+    canvas.requestPointerLock();
+  }
+});
+
 window.addEventListener('mousemove', function(e) {
   if (!state || phase !== 'playing' || state.paused) return;
-  const rect = canvas.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const rel = (e.clientX - cx) / (rect.width / 2);
-  // Sensitivity: full mouse range maps to ±60° (was ±180°)
-  // You need to move the mouse more to sweep — feels heavier
-  state.hornAngle = rel * 60;
-  scene.setViewAngle(state.hornAngle);
+  // movementX/Y work both with and without pointer lock
+  // but pointer lock gives unlimited movement (no screen edge)
+  const dx = e.movementX || 0;
+  const dy = e.movementY || 0;
+  state.hornAngle += dx * MOUSE_SENSITIVITY;
+  state.viewPitch = Math.max(-90, Math.min(90, state.viewPitch - dy * MOUSE_SENSITIVITY_Y));
+  scene.setViewAngle(state.hornAngle, state.viewPitch);
 });
 
 // Submit button
