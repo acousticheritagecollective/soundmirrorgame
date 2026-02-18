@@ -31,6 +31,11 @@ At the focal point of the mirror, a listening system was positioned. Initially, 
 
 A 1924 report suggested that sound mirrors were ten times more sensitive than the human ear, and they were tested by blind listeners in 1925 to maximize auditory acuity. Test results indicated that operators should switch every 40 minutes to avoid irritation caused by the noise of small weather changes or the movement of ships in the English Channel.
 
+
+![home](https://github.com/user-attachments/assets/ca876f7e-c897-42be-b4db-c490db591c15)
+
+
+
 ### Strategic Context and Obsolescence
 
 The construction location of Abbot's Cliff followed recommendations from the Royal Aircraft Factory: "The position chosen for a reflector should be the flat top of a low hill since such a position is fairly free from local sounds. An absence of trees is also an advantage since the rustling of the leaves interferes with the hearing. If mounted near the coast, say on cliffs, the reflector should be kept back say two or three hundred yards from the edge of the cliffs so as to eliminate the noise of the waves."
