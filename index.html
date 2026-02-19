@@ -118,16 +118,16 @@ body { font-family:var(--font-mono); font-size:12px; }
 
 /* ── INSTRUCTIONS ────────────────────────── */
 .briefing-section {
-  text-align:left; line-height:1.85; font-size:11px; color:var(--cream);
+  text-align:left; line-height:1.85; font-size:15px; color:var(--cream);
   padding:10px 0;
 }
 .briefing-label {
-  color:var(--accent); font-weight:bold; letter-spacing:2px;
-  margin-bottom:6px; font-size:11px;
+  color:var(--accent); font-weight:bold; letter-spacing:1px;
+  margin-bottom:6px; font-size:15px;
 }
 .key-badge {
   display:inline-block; background:rgba(0,0,0,0.15); border:1px solid var(--border);
-  padding:1px 8px; color:var(--cream); font-size:11px;
+  padding:1px 8px; color:var(--cream); font-size:14px;
   font-family:var(--font-mono); margin:0 2px; font-weight:bold;
 }
 .controls-row {
@@ -392,57 +392,149 @@ body { font-family:var(--font-mono); font-size:12px; }
 
 <!-- INSTRUCTIONS -->
 <div id="instructions-screen" class="overlay">
-  <div class="panel" style="max-width:640px">
+  <div class="panel" style="max-width:880px">
     <div class="panel-sub" style="color:var(--warn)">CLASSIFIED — RAF ACOUSTIC DEFENCE</div>
     <div class="panel-title">PHANTOMS IN THE SKY</div>
     <div class="panel-sub">A GAME OF WAR WITHOUT VIOLENCE</div>
     <div class="panel-sub" style="margin-top:6px">ACOUSTIC HERITAGE COLLECTIVE — 2026</div>
     <hr class="panel-divider">
 
-    <div style="margin:4px 0 8px; text-align:center;">
-      <img src="home.jpg" alt="Abbott's Cliff Sound Mirror" style="width:100%; max-width:400px; border:1px solid var(--border); opacity:0.85; border-radius:2px;">
+    <div style="margin:8px 0 12px; text-align:center;">
+      <img src="home.jpg" alt="Abbott's Cliff Sound Mirror" style="width:100%; max-width:500px; border:1px solid var(--border); opacity:0.85; border-radius:2px;">
     </div>
 
-    <div class="briefing-section">
-      <div class="briefing-label">◆ BRIEFING</div>
-      Enemy formations are approaching across the English Channel.
-      You are the listener operator at Abbott's Cliff Sound Mirror, Kent.
+    <!-- Introduction -->
+    <div class="briefing-section" style="font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:13px; line-height:1.6;">
+      <div class="briefing-label">◆ INTRODUCTION</div>
+      <strong>Phantoms in the Sky</strong> is an acoustic heritage game that recreates the experience of a sound mirror listener operator at Abbot's Cliff, Kent (UK). Built in 1928 as part of Dr. William Sansome Tucker's experimental early warning system, this 6-meter concrete dish could detect aircraft up to 22 miles away—long before the invention of radar.
       <br><br>
-      Use your acoustic horn to sweep for engine noise peaks.
-      Detect incoming formations before they breach our defenses.
+      You will defend the English coast across seven historical waves, from the 1920s trials through WWII, the Cold War, and into a speculative 2025 conflict. Unlike traditional war games, survival here depends on <strong>listening</strong>—not destruction, but acute auditory perception and patience.
+      <br><br>
+      This game is based on rigorous acoustic research by The Acoustic Heritage Collective, who conducted in-situ measurements at Abbot's Cliff in October 2022 and developed auralization models using i-SIMPA acoustic simulation software.
     </div>
 
+    <!-- Historical Images -->
+    <div style="display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; justify-content:center;">
+      <img src="abbotsclifforiginalimage.webp" alt="Abbot's Cliff 1932" style="height:90px; border:1px solid var(--border); opacity:0.8; border-radius:2px;">
+      <img src="2022insiturecordings.jpeg" alt="2022 In-Situ Recordings" style="height:90px; border:1px solid var(--border); opacity:0.8; border-radius:2px;">
+      <img src="acousticmodeling.png" alt="Acoustic Modeling" style="height:90px; border:1px solid var(--border); opacity:0.8; border-radius:2px;">
+    </div>
+    <div style="text-align:center; font-size:8px; color:var(--text-dim); margin-bottom:12px;">
+      Left: Abbot's Cliff Sound Mirror, 1932 | Center: Field recordings 2022 | Right: i-SIMPA acoustic simulation
+    </div>
+
+    <!-- Mission Briefing -->
+    <div class="briefing-section" style="font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:10px; line-height:1.7;">
+      <div class="briefing-label">◆ YOUR MISSION</div>
+      Enemy formations are approaching across the English Channel. You are the listener operator at Abbot's Cliff Sound Mirror. Your acoustic horn is positioned at the mirror's focal point, where sound waves concentrate and amplify distant aircraft engines.
+      <br><br>
+      <strong>Objective:</strong> Sweep the horn to find peak engine sound intensity. Detect incoming formations before they breach defensive lines. Each wave represents a different historical period with increasing speed, difficulty, and atmospheric interference.
+    </div>
+
+    <!-- Controls Section -->
     <div class="briefing-section" style="border-top:1px solid var(--border); padding-top:12px">
       <div class="briefing-label">◆ CONTROLS</div>
-      <div class="controls-row">
-        <span class="key-badge">← →</span> or <span class="key-badge">MOUSE</span>
-        <span class="controls-label">Rotate horn &amp; view (360°)</span>
-      </div>
-      <div class="controls-row">
-        <span class="key-badge">SPACE</span>
-        <span class="controls-label" style="margin-left:58px">Confirm detection</span>
-      </div>
-      <div class="controls-row">
-        <span class="key-badge">ESC</span>
-        <span class="controls-label" style="margin-left:72px">Pause</span>
-      </div>
-      <div class="controls-row">
-        <span class="key-badge">Q</span>
-        <span class="controls-label" style="margin-left:88px">Quit mission</span>
+      <div style="font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:10px; line-height:1.9;">
+        <div class="controls-row">
+          <span class="key-badge">← →</span> or <span class="key-badge">MOUSE</span>
+          <span class="controls-label">Rotate horn &amp; view (360°)</span>
+        </div>
+        <div class="controls-row">
+          <span class="key-badge">↑ ↓</span>
+          <span class="controls-label" style="margin-left:58px">Adjust vertical pitch</span>
+        </div>
+        <div class="controls-row">
+          <span class="key-badge">SPACE</span>
+          <span class="controls-label" style="margin-left:58px">Confirm detection</span>
+        </div>
+        <div class="controls-row">
+          <span class="key-badge">SHIFT</span> + <span class="key-badge">ARROWS</span>
+          <span class="controls-label" style="margin-left:15px">Fine adjustment (0.05°)</span>
+        </div>
+        <div class="controls-row">
+          <span class="key-badge">ESC</span>
+          <span class="controls-label" style="margin-left:72px">Pause game</span>
+        </div>
+        <div class="controls-row">
+          <span class="key-badge">Q</span>
+          <span class="controls-label" style="margin-left:88px">Quit mission</span>
+        </div>
       </div>
     </div>
 
-    <div class="briefing-section" style="border-top:1px solid var(--border); font-size:10px; line-height:1.75; padding-top:12px">
+    <!-- Rules of Engagement -->
+    <div class="briefing-section" style="border-top:1px solid var(--border); font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:9px; line-height:1.75; padding-top:12px">
       <div class="briefing-label">◆ RULES OF ENGAGEMENT</div>
-      Sweep the horn to find peak engine sound intensity<br>
-      Press SPACE when you hear maximum signal — tolerance varies by wave<br>
-      1.5 second cooldown between detection attempts<br>
-      3 lives per wave — misses and breaches cost a life<br>
-      Detecting at greater distance earns more points<br>
-      Weather conditions will increasingly degrade detection
+      • Sweep the acoustic horn slowly to find peak engine sound intensity<br>
+      • Press SPACE when aligned—tolerance varies by wave (±1.2° in 1920s, ±0.4° in 2025)<br>
+      • 1.5 second cooldown between detection attempts<br>
+      • 3 lives per wave—misses and breaches cost a life<br>
+      • Detecting at greater distances earns more points (max 1000 pts at 40km)<br>
+      • Weather degrades detection: Clear → Overcast → Fog → Storm<br>
+      • Aircraft speed increases each wave: 30 m/s (1920s) → 850 m/s (2025)<br>
+      • Use the radar display (bottom-right) for tactical awareness
     </div>
 
-    <div class="prompt blink">[ PRESS SPACE TO BEGIN MISSION ]</div>
+    <!-- The Seven Waves -->
+    <div class="briefing-section" style="border-top:1px solid var(--border); padding-top:12px; font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:9px; line-height:1.6;">
+      <div class="briefing-label">◆ THE SEVEN WAVES</div>
+      <strong>Wave 1: 1920s TRIALS</strong> — Experimental biplanes, clear skies (30 m/s)<br>
+      <strong>Wave 2: 1939-45 BLITZ</strong> — WWII German bombers, storm conditions (110 m/s)<br>
+      <strong>Wave 3: 1950s KOREA</strong> — Early jet age, overcast weather (280 m/s)<br>
+      <strong>Wave 4: 1979-89 AFGHAN</strong> — Cold War tactical aircraft, haze (260 m/s)<br>
+      <strong>Wave 5: 1982 FALKLANDS</strong> — Subsonic jets, dense fog (300 m/s)<br>
+      <strong>Wave 6: 1991 DESERT STORM</strong> — Supersonic fighters, clear skies (650 m/s)<br>
+      <strong>Wave 7: 2025 EASTERN FRONT</strong> — Hypersonic threats, severe storm (850 m/s)
+    </div>
+
+    <!-- Acoustic Heritage -->
+    <div class="briefing-section" style="border-top:1px solid var(--border); padding-top:12px; font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:9px; line-height:1.7;">
+      <div class="briefing-label">◆ ACOUSTIC HERITAGE SAFEGUARDING</div>
+      This game's audio model is based on authentic acoustic simulations that account for:
+      <br>
+      • Distance attenuation (inverse square law + atmospheric absorption)<br>
+      • Sound mirror physical SPL amplification (+18 dB at focal point)<br>
+      • Frequency response of period stethoscopes and trumpet listening devices<br>
+      • Historical weather conditions and ambient soundscapes
+      <br><br>
+      The auralization recreates what operators would have heard in 1928, honoring the acoustic heritage of these monumental "listening ears."
+    </div>
+
+    <!-- Credits Brief -->
+    <div class="briefing-section" style="border-top:1px solid var(--border); padding-top:12px; font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size:8px; line-height:1.6; color:var(--text-dim);">
+      <div class="briefing-label">◆ CREDITS</div>
+      <strong>Research & Measurements (2022):</strong> Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez<br>
+      <strong>Acoustic Heritage Collective:</strong> Marx E., Raventós G., Gómez E., Lavandeira J.<br>
+      <strong>Acoustic Modeling:</strong> i-SIMPA software (CSTB)<br>
+      <strong>Auralization & Game Design:</strong> Ɇ₥łⱠłØ ₥₳ⱤӾ<br>
+      <strong>3D Modeling:</strong> Joan Lavandeira
+    </div>
+
+    <!-- Start Button -->
+    <div style="text-align:center; margin:24px 0 12px;">
+      <button id="start-mission-btn" style="
+        background: linear-gradient(180deg, var(--accent) 0%, #a00e28 100%);
+        border: 2px solid var(--cream);
+        color: var(--cream);
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 4px;
+        padding: 16px 48px;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(200,16,46,0.4), 0 0 20px rgba(200,16,46,0.2) inset;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      ">
+        BEGIN MISSION
+      </button>
+    </div>
+    <div style="text-align:center; font-size:9px; color:var(--text-dim); margin-bottom:8px; font-family: 'IBM Plex Mono', 'Courier New', monospace;">
+      (or press SPACE)
+    </div>
+
     <div class="credits">
       ACOUSTIC HERITAGE COLLECTIVE — <a href="https://acousticheritagecollective.org" target="_blank">acousticheritagecollective.org</a>
     </div>
@@ -588,7 +680,7 @@ body { font-family:var(--font-mono); font-size:12px; }
 
 // ── CONSTANTS ──────────────────────────────────────────────────
 const FIELD_DEPTH   = 40000;    // 40km
-const FIELD_WIDTH   = 25000;    // ±30km spawn width (gives ~14° at 40km, within detection range)
+const FIELD_WIDTH   = 22000;    // ±22km spawn width (gives ~14° at 40km, within detection range)
 const TARGET_WIDTH  = 25000;     // ±3km at y=0
 const SPEED         = 60;       // 50 m/s (180 km/h)
 const SOURCE_DB     = 140;      // dB @ 1m
@@ -1974,6 +2066,27 @@ window.addEventListener('mousemove', function(e) {
 
 // Submit button
 $('submit-btn').addEventListener('click', submitScore);
+
+// Start Mission button
+document.addEventListener('DOMContentLoaded', function() {
+  const startBtn = document.getElementById('start-mission-btn');
+  if (startBtn) {
+    startBtn.addEventListener('click', function() {
+      if (phase === 'instructions') {
+        startGame();
+      }
+    });
+    // Hover effect
+    startBtn.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.05)';
+      this.style.boxShadow = '0 6px 20px rgba(200,16,46,0.6), 0 0 30px rgba(200,16,46,0.3) inset';
+    });
+    startBtn.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+      this.style.boxShadow = '0 4px 15px rgba(200,16,46,0.4), 0 0 20px rgba(200,16,46,0.2) inset';
+    });
+  }
+});
 
 // Resize
 window.addEventListener('resize', () => scene.resize());
